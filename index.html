@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Your daily spiritual + productivity command center. Track sadhana, deep work, creative output, and more." />
+  <title>Seva Operating Dashboard — Daily Command Center</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧭</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="index.css" />
+</head>
+<body>
+  <div class="app-container">
+
+    <!-- ═══════════════════════════════════════════════════ HEADER -->
+    <header class="main-header">
+      <h1 class="app-title" style="font-family:var(--font-heading);font-weight:800;font-size:1.25rem;background:linear-gradient(135deg,#f59e0b,#d97706);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.02em;flex-shrink:0;">🧭 Seva Dashboard</h1>
+
+      <div class="date-nav" style="display:flex;align-items:center;gap:0.5rem;">
+        <button id="prevDay" class="nav-btn" aria-label="Previous day" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;background:rgba(148,163,184,0.08);color:#94a3b8;font-size:1.125rem;transition:all 0.15s cubic-bezier(0.4,0,0.2,1);border:1px solid transparent;cursor:pointer;">←</button>
+        <span id="currentDate" class="date-display" style="font-family:var(--font-heading);font-weight:600;font-size:0.875rem;color:#f8fafc;min-width:180px;text-align:center;">May 30, 2026</span>
+        <button id="nextDay" class="nav-btn" aria-label="Next day" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;background:rgba(148,163,184,0.08);color:#94a3b8;font-size:1.125rem;transition:all 0.15s cubic-bezier(0.4,0,0.2,1);border:1px solid transparent;cursor:pointer;">→</button>
+        <button id="todayBtn" class="today-btn" style="padding:0.25rem 0.75rem;border-radius:9999px;font-size:0.75rem;font-weight:600;color:#94a3b8;background:rgba(148,163,184,0.08);border:1px solid rgba(148,163,184,0.1);cursor:pointer;transition:all 0.15s;">Today</button>
+      </div>
+
+      <div class="view-toggle" style="display:flex;gap:2px;background:rgba(148,163,184,0.06);border-radius:9999px;padding:3px;border:1px solid rgba(148,163,184,0.1);flex-shrink:0;">
+        <button id="dashboardBtn" class="toggle-btn active" data-view="dashboard">📋 Dashboard</button>
+        <button id="analyticsBtn" class="toggle-btn" data-view="analytics">📊 Analytics</button>
+      </div>
+    </header>
+
+    <!-- ═══════════════════════════════════════════════════ MAIN -->
+    <main>
+
+      <!-- ─────────────────────────── DASHBOARD VIEW ─────────────────────────── -->
+      <div class="dashboard-view" id="dashboardView">
+
+        <!-- ▸ Overall Progress -->
+        <div class="progress-overview" style="display:flex;align-items:center;gap:1.5rem;padding:1.5rem;background:var(--bg-card);border-radius:16px;border:1px solid var(--border-card);margin-bottom:1rem;">
+          <div class="progress-ring-container" style="position:relative;width:120px;height:120px;flex-shrink:0;">
+            <svg class="progress-ring" width="120" height="120" style="transform:rotate(-90deg);">
+              <circle class="progress-ring-bg" cx="60" cy="60" r="52" fill="none" stroke="rgba(148,163,184,0.1)" stroke-width="8" />
+              <circle class="progress-ring-fill" id="progressRing" cx="60" cy="60" r="52" fill="none" stroke="#f59e0b" stroke-width="8" stroke-linecap="round" stroke-dasharray="326.73" stroke-dashoffset="326.73" style="transition:stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1),stroke 0.3s;filter:drop-shadow(0 0 6px rgba(245,158,11,0.4));" />
+            </svg>
+            <span class="progress-text" id="progressText" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(90deg);font-family:var(--font-heading);font-weight:800;font-size:1.5rem;color:#f8fafc;">0%</span>
+          </div>
+          <div class="progress-info">
+            <h2 style="font-size:1.25rem;margin-bottom:0.25rem;">Today's Progress</h2>
+            <p class="progress-subtitle" id="progressSubtitle" style="color:#94a3b8;font-size:0.875rem;">Start your day with Sadhana</p>
+          </div>
+        </div>
+
+        <!-- ▸ Identity Banner -->
+        <div class="identity-banner" id="identityBanner">
+          <div class="banner-glow"></div>
+          <h2 class="banner-title" style="font-family:var(--font-heading);font-weight:700;font-size:0.875rem;color:#f59e0b;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:1rem;">🔥 TODAY'S IDENTITY</h2>
+          <p class="banner-quote" style="font-style:italic;font-size:1.25rem;color:#f59e0b;line-height:1.5;margin-bottom:1.25rem;padding-left:1rem;">
+            "I am serving Maa-Baba through structured action, not emotional reaction."
+          </p>
+          <div class="non-negotiables">
+            <h3 style="font-size:0.75rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.75rem;">Today's 3 Non-Negotiables:</h3>
+            <div class="nn-inputs" style="display:flex;flex-wrap:wrap;gap:0.75rem;">
+              <div class="nn-item" style="flex:1;min-width:200px;display:flex;align-items:center;gap:0.5rem;">
+                <span class="nn-icon">🎯</span>
+                <input type="text" class="seva-input" id="nn1" placeholder="Deep Work Output" />
+              </div>
+              <div class="nn-item" style="flex:1;min-width:200px;display:flex;align-items:center;gap:0.5rem;">
+                <span class="nn-icon">🙏</span>
+                <input type="text" class="seva-input" id="nn2" placeholder="Seva / Content Output" />
+              </div>
+              <div class="nn-item" style="flex:1;min-width:200px;display:flex;align-items:center;gap:0.5rem;">
+                <span class="nn-icon">💪</span>
+                <input type="text" class="seva-input" id="nn3" placeholder="Body / Sadhana" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ▸ Dashboard Grid -->
+        <div class="dashboard-grid" id="dashboardGrid">
+
+          <!-- ── Section 1 ▸ Morning Core / Sadhana ── -->
+          <div class="section-card sadhana" id="sectionSadhana" data-section="sadhana">
+            <div class="section-header">
+              <h3><span class="section-emoji">🌅</span> Morning Core — Sadhana</h3>
+            </div>
+            <div class="section-body">
+              <div class="task-group">
+                <div class="task-item">
+                  <input type="checkbox" class="task-check" id="chkJapa" data-field="sadhana.japa" />
+                  <label for="chkJapa" class="task-label">Japa / Mantra</label>
+                  <input type="number" class="seva-input mini-input" id="japaMinutes" placeholder="min" min="0" max="180" data-field="sadhana.japaMinutes" style="width:60px;text-align:center;" />
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-check" id="chkMeditation" data-field="sadhana.meditation" />
+                  <label for="chkMeditation" class="task-label">Meditation / Silence</label>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-check" id="chkReading" data-field="sadhana.reading" />
+                  <label for="chkReading" class="task-label">Reading / Pravachan Reflection</label>
+                </div>
+              </div>
+              <div class="input-group">
+                <label class="input-label">Intent Setting (1 line):</label>
+                <input type="text" class="seva-input" id="intentText" placeholder="Today's intention..." data-field="sadhana.intent" />
+              </div>
+              <div class="scores-group">
+                <h4 style="font-size:0.75rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.5rem;">State Check</h4>
+                <div class="score-row" style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem;">
+                  <label style="font-size:0.875rem;color:#94a3b8;font-weight:500;min-width:70px;">Calm</label>
+                  <input type="range" class="score-slider" id="scoreCalm" min="1" max="10" value="5" data-field="sadhana.calm" />
+                  <span class="score-value" id="scoreCalmVal" style="font-family:var(--font-heading);font-weight:700;font-size:0.875rem;color:#f59e0b;min-width:24px;text-align:right;">5</span>
+                </div>
+                <div class="score-row" style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem;">
+                  <label style="font-size:0.875rem;color:#94a3b8;font-weight:500;min-width:70px;">Focus</label>
+                  <input type="range" class="score-slider" id="scoreFocus" min="1" max="10" value="5" data-field="sadhana.focus" />
+                  <span class="score-value" id="scoreFocusVal" style="font-family:var(--font-heading);font-weight:700;font-size:0.875rem;color:#f59e0b;min-width:24px;text-align:right;">5</span>
+                </div>
+                <div class="score-row" style="display:flex;align-items:center;gap:0.75rem;">
+                  <label style="font-size:0.875rem;color:#94a3b8;font-weight:500;min-width:70px;">Devotion</label>
+                  <input type="range" class="score-slider" id="scoreDevotion" min="1" max="10" value="5" data-field="sadhana.devotion" />
+                  <span class="score-value" id="scoreDevotionVal" style="font-family:var(--font-heading);font-weight:700;font-size:0.875rem;color:#f59e0b;min-width:24px;text-align:right;">5</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Section 2 ▸ Body System ── -->
+          <div class="section-card body" id="sectionBody" data-section="body">
+            <div class="section-header">
+              <h3><span class="section-emoji">💪</span> Body System — Energy Engine</h3>
+            </div>
+            <div class="section-body">
+              <div class="task-group">
+                <div class="task-item">
+                  <input type="checkbox" class="task-check" id="chkStrength" data-field="body.strength" />
+                  <label for="chkStrength" class="task-label">Strength / Cardio Session</label>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-check" id="chkWalk" data-field="body.walk" />
+                  <label for="chkWalk" class="task-label">Walk</label>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-check" id="chkStretching" data-field="body.stretching" />
+                  <label for="chkStretching" class="task-label">Stretching</label>
+                </div>
+              </div>
+              <div class="scores-group">
+                <div class="score-row" style="display:flex;align-items:center;gap:0.75rem;">
+                  <label style="font-size:0.875rem;color:#94a3b8;font-weight:500;min-width:150px;">Energy After Workout</label>
+                  <input type="range" class="score-slider" id="scoreEnergy" min="1" max="10" value="5" data-field="body.energy" />
+                  <span class="score-value" id="scoreEnergyVal" style="font-family:var(--font-heading);font-weight:700;font-size:0.875rem;color:#f59e0b;min-width:24px;text-align:right;">5</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Section 3 ▸ Deep Work ── -->
+          <div class="section-card deepwork" id="sectionDeepWork" data-section="deep-work">
+            <div class="section-header">
+              <h3><span class="section-emoji">🧠</span> Deep Work — Main Reality Zone</h3>
+            </div>
+            <div class="section-body">
+              <div class="task-subgroup">
+                <h4 style="font-size:0.875rem;font-weight:600;color:#f59e0b;margin-bottom:0.5rem;">💰 Growth / Income</h4>
+                <div class="task-item">
+                  <input type="checkbox" class="task-check" id="chkSeo" data-field="deepWork.seo" />
+                  <label for="chkSeo" class="task-label">SEO Work (Sites)</label>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-check" id="chkAffiliate" data-field="deepWork.affiliate" />
+                  <label for="chkAffiliate" class="task-label">Affiliate / Monetization</label>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-check" id="chkLeads" data-field="deepWork.leads" />
+                  <label for="chkLeads" class="task-label">Lead Generation / Outreach</label>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-check" id="chkFunnel" data-field="deepWork.funnel" />
+                  <label for="chkFunnel" class="task-label">Funnel Improvement</label>
+                </div>
+              </div>
+              <div class="task-subgroup" style="margin-top:0.75rem;">
+                <h4 style="font-size:0.875rem;font-weight:600;color:#f59e0b;margin-bottom:0.5rem;">⚙️ Execution</h4>
+                <div class="task-item">
+                  <input type="checkbox" class="task-check" id="chkUpload" data-field="deepWork.upload" />
+                  <label for="chkUpload" class="task-label">Upload Content (Video/Audio/Blog)</label>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-check" id="chkLandingPage" data-field="deepWork.landingPage" />
+                  <label for="chkLandingPage" class="task-label">Landing Page / Site Edits</label>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-check" id="chkTechFixes" data-field="deepWork.techFixes" />
+                  <label for="chkTechFixes" class="task-label">Technical Fixes</label>
+                </div>
+              </div>
+              <div class="input-group output-rule" style="margin-top:1rem;">
+                <label class="input-label">🎯 OUTPUT RULE — Today I shipped:</label>
+                <input type="text" class="seva-input" id="shippedText" placeholder="Write ONE measurable result..." data-field="deepWork.shipped" />
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Section 4 ▸ Creative Block ── -->
+          <div class="section-card creative" id="sectionCreative" data-section="creative">
+            <div class="section-header">
+              <h3><span class="section-emoji">🎨</span> Creative Block — Bhav + Music</h3>
+            </div>
+            <div class="section-body">
+              <div class="task-group">
+                <div class="task-item">
+                  <input type="checkbox" class="task-check" id="chkMusic" data-field="creative.musicPractice" />
+                  <label for="chkMusic" class="task-label">Music Practice / Bhajan / Composition</label>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-check" id="chkScript" data-field="creative.scriptReel" />
+                  <label for="chkScript" class="task-label">Script / Reel Idea Creation</label>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-check" id="chkCreativeExplore" data-field="creative.creativeExplore" />
+                  <label for="chkCreativeExplore" class="task-label">Creative Exploration (No Pressure)</label>
+                </div>
+              </div>
+              <div class="input-group">
+                <label class="input-label">🎵 Output Today:</label>
+                <input type="text" class="seva-input" id="creativeOutput" placeholder="Idea / clip / composition..." data-field="creative.output" />
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Section 5 ▸ Distribution ── -->
+          <div class="section-card distribution" id="sectionDistribution" data-section="distribution">
+            <div class="section-header">
+              <h3><span class="section-emoji">📣</span> Distribution — Light Work Zone</h3>
+            </div>
+            <div class="section-body">
+              <p class="section-rule" style="font-size:0.75rem;font-weight:600;color:#f43f5e;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.5rem;">⛔ NO heavy thinking here. Only posting.</p>
+              <div class="task-group">
+                <div class="task-item">
+                  <input type="checkbox" class="task-check" id="chkPostReel" data-field="distribution.postReel" />
+                  <label for="chkPostReel" class="task-label">Post Reel / Short</label>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-check" id="chkPinterestYt" data-field="distribution.pinterestYt" />
+                  <label for="chkPinterestYt" class="task-label">Pinterest / YouTube Description</label>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-check" id="chkBlogRepurpose" data-field="distribution.blogRepurpose" />
+                  <label for="chkBlogRepurpose" class="task-label">Blog Repurpose</label>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-check" id="chkCommunity" data-field="distribution.communityEngagement" />
+                  <label for="chkCommunity" class="task-label">Community Engagement</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Section 6 ▸ System / Strategy ── -->
+          <div class="section-card system" id="sectionSystem" data-section="system">
+            <div class="section-header">
+              <h3><span class="section-emoji">🧩</span> System / Strategy</h3>
+              <span class="optional-badge" style="margin-left:auto;padding:2px 8px;border-radius:9999px;font-size:0.75rem;font-weight:600;background:rgba(6,182,212,0.12);color:#06b6d4;">Optional Daily</span>
+            </div>
+            <div class="section-body">
+              <div class="task-group">
+                <div class="task-item">
+                  <input type="checkbox" class="task-check" id="chkPlanning" data-field="system.planning" />
+                  <label for="chkPlanning" class="task-label">Planning / Funnel Thinking</label>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-check" id="chkAutomation" data-field="system.automation" />
+                  <label for="chkAutomation" class="task-label">Automation / AI System Building</label>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-check" id="chkWeeklyStructure" data-field="system.weeklyStructure" />
+                  <label for="chkWeeklyStructure" class="task-label">Weekly Structure Update</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Section 7 ▸ Shutdown Review ── -->
+          <div class="section-card shutdown" id="sectionShutdown" data-section="shutdown">
+            <div class="section-header">
+              <h3><span class="section-emoji">🌙</span> Shutdown Review</h3>
+              <span class="mandatory-badge" style="margin-left:auto;padding:2px 8px;border-radius:9999px;font-size:0.75rem;font-weight:600;background:rgba(245,158,11,0.12);color:#f59e0b;">Mandatory</span>
+            </div>
+            <div class="section-body">
+              <div class="input-group">
+                <label class="input-label">✔️ What actually moved forward today?</label>
+                <textarea class="seva-textarea" id="movedForward" placeholder="What moved forward..." data-field="shutdown.movedForward"></textarea>
+              </div>
+              <div class="input-group">
+                <label class="input-label">⚠️ What blocked me?</label>
+                <textarea class="seva-textarea" id="whatBlocked" placeholder="What blocked you..." data-field="shutdown.blocked"></textarea>
+              </div>
+              <div class="input-group">
+                <label class="input-label">🔁 Tomorrow's Top 3:</label>
+                <textarea class="seva-textarea" id="tomorrowTop3" placeholder="1.&#10;2.&#10;3." data-field="shutdown.tomorrowTop3"></textarea>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /dashboard-grid -->
+
+        <!-- ▸ Anti-Freeze Panel -->
+        <div class="antifreeze-panel" id="antifreezePanel" style="margin-top:1rem;">
+          <div class="antifreeze-header" id="antifreezeToggle">
+            <span class="pulse-dot" style="width:10px;height:10px;min-width:10px;border-radius:50%;background:#f43f5e;animation:pulseDot 2s ease-in-out infinite;flex-shrink:0;"></span>
+            <h3 style="font-family:var(--font-heading);font-weight:700;font-size:0.875rem;color:#f43f5e;flex:1;">🚨 ANTI-FREEZE PROTOCOL</h3>
+            <span class="expand-icon" id="antifreezeIcon" style="color:#64748b;font-size:1.125rem;transition:transform 0.3s;">▸</span>
+          </div>
+          <div class="antifreeze-body" id="antifreezeBody">
+            <p>When stuck, do <strong>ONLY</strong> this:</p>
+            <ol style="padding-left:1.25rem;margin-top:0.5rem;line-height:1.8;">
+              <li>Open Deep Work section</li>
+              <li>Do the smallest visible task <strong>(10 min rule)</strong></li>
+              <li>Ignore all other tabs until motion starts</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- ▸ Daily Rules Strip -->
+        <div class="rules-strip" style="margin-top:1rem;">
+          <div class="rule-item rule-dont">❌ No switching tasks without finishing one block</div>
+          <div class="rule-item rule-dont">❌ No mixing creative + money + admin in same minute</div>
+          <div class="rule-item rule-dont">❌ No "planning loop" longer than 15 min</div>
+          <div class="rule-item rule-do">✔️ One block → one output → done</div>
+        </div>
+
+        <!-- ▸ Day Reset Banner -->
+        <div class="reset-banner" style="margin-top:1rem;padding:1rem 1.5rem;background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(139,92,246,0.05));border-radius:12px;border:1px solid rgba(245,158,11,0.15);text-align:center;">
+          <p style="font-size:0.875rem;color:#94a3b8;">🧭 <strong style="color:#f8fafc;">IF YOUR DAY BREAKS</strong> — Restart from: <span class="reset-path" style="color:#f59e0b;font-weight:600;">👉 Sadhana (5-10 min) → Deep Work → Everything else</span></p>
+        </div>
+
+      </div><!-- /dashboard-view -->
+
+      <!-- ─────────────────────────── ANALYTICS VIEW ─────────────────────────── -->
+      <div class="analytics-view hidden" id="analyticsView">
+
+        <div class="analytics-controls">
+          <div class="time-range-pills" style="display:flex;gap:2px;background:rgba(148,163,184,0.06);border-radius:9999px;padding:3px;border:1px solid rgba(148,163,184,0.1);">
+            <button class="range-pill active" data-range="7">7 Days</button>
+            <button class="range-pill" data-range="30">30 Days</button>
+            <button class="range-pill" data-range="90">90 Days</button>
+            <button class="range-pill" data-range="365">1 Year</button>
+          </div>
+          <span class="range-label" id="rangeLabel" style="font-size:0.75rem;color:#64748b;margin-left:auto;font-weight:500;">Last 7 days</span>
+        </div>
+
+        <div class="stat-cards" style="display:grid;grid-template-columns:repeat(2,1fr);gap:0.75rem;margin-bottom:1.5rem;">
+          <div class="stat-card">
+            <span class="stat-icon">🔥</span>
+            <span class="stat-number" id="statStreak">0</span>
+            <span class="stat-label">Day Streak</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">✅</span>
+            <span class="stat-number" id="statTotalTasks">0</span>
+            <span class="stat-label">Tasks Done</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">📊</span>
+            <span class="stat-number" id="statAvgCompletion">0%</span>
+            <span class="stat-label">Avg Completion</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">🧘</span>
+            <span class="stat-number" id="statAvgDevotion">0</span>
+            <span class="stat-label">Avg Devotion</span>
+          </div>
+        </div>
+
+        <div class="analytics-grid">
+          <div class="chart-card">
+            <h3 class="chart-title" style="font-family:var(--font-heading);font-weight:700;font-size:0.875rem;color:#f8fafc;">📈 Completion Trend</h3>
+            <div style="position:relative;height:250px;"><canvas id="completionChart"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <h3 class="chart-title" style="font-family:var(--font-heading);font-weight:700;font-size:0.875rem;color:#f8fafc;">🎯 Section Performance</h3>
+            <div style="position:relative;height:250px;"><canvas id="sectionChart"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <h3 class="chart-title" style="font-family:var(--font-heading);font-weight:700;font-size:0.875rem;color:#f8fafc;">🧘 Score Trends</h3>
+            <div style="position:relative;height:250px;"><canvas id="scoresChart"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <h3 class="chart-title" style="font-family:var(--font-heading);font-weight:700;font-size:0.875rem;color:#f8fafc;">🕸️ Balance Radar</h3>
+            <div style="position:relative;height:300px;"><canvas id="radarChart"></canvas></div>
+          </div>
+        </div>
+
+      </div><!-- /analytics-view -->
+
+    </main>
+
+  </div><!-- /app-container -->
+
+  <script src="app.js"></script>
+</body>
+</html>
