@@ -31,8 +31,13 @@
         <button id="analyticsBtn" class="toggle-btn" data-view="analytics">📊 Analytics</button>
         <button id="ganttBtn" class="toggle-btn" data-view="gantt">📅 Gantt</button>
       </div>
-    </header>
 
+      <div style="display:flex;gap:0.375rem;flex-shrink:0;">
+        <button id="exportBtn" title="Export Data" style="padding:0.375rem 0.625rem;border-radius:8px;font-size:0.6875rem;font-weight:600;color:#94a3b8;background:rgba(148,163,184,0.08);border:1px solid rgba(148,163,184,0.1);cursor:pointer;transition:all 0.15s;white-space:nowrap;">⬇ Export</button>
+        <button id="importBtn" title="Import Data" style="padding:0.375rem 0.625rem;border-radius:8px;font-size:0.6875rem;font-weight:600;color:#94a3b8;background:rgba(148,163,184,0.08);border:1px solid rgba(148,163,184,0.1);cursor:pointer;transition:all 0.15s;white-space:nowrap;">⬆ Import</button>
+        <input type="file" id="importFile" accept=".json" style="display:none;" />
+      </div>
+    </header>
     <!-- ═══════════════════════════════════════════════════ MAIN -->
     <main>
 

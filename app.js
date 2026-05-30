@@ -197,6 +197,13 @@ class SevaApp {
     // --- Anti-freeze toggle ---
     this.dom.antifreezeToggle?.addEventListener('click', () => this.toggleAntifreeze());
 
+    // --- Export / Import ---
+    document.getElementById('exportBtn')?.addEventListener('click', () => this.exportData());
+    document.getElementById('importBtn')?.addEventListener('click', () => {
+      document.getElementById('importFile')?.click();
+    });
+    document.getElementById('importFile')?.addEventListener('change', (e) => this.importData(e));
+
     // --- Range pills ---
     document.querySelectorAll('.range-pill').forEach((pill) => {
       pill.addEventListener('click', () => this.selectRange(pill));
@@ -615,6 +622,64 @@ class SevaApp {
       panel.classList.add('expanded');
       if (icon) icon.textContent = '▾';
     }
+  }
+
+  /* ─────────────────────────────────────────────
+     EXPORT / IMPORT DATA
+  ───────────────────────────────────────────── */
+
+  /** Export all Seva data as a JSON file download */
+  exportData() {
+    const data = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('seva')) {
+        try {
+          data[key] = JSON.parse(localStorage.getItem(key));
+        } catch {
+          data[key] = localStorage.getItem(key);
+        }
+      }
+    }
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const date = new Date().toISOString().split('T')[0];
+    a.href = url;
+    a.download = `seva-backup-${date}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  /** Import Seva data from a JSON file */
+  importData(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        let count = 0;
+        for (const [key, value] of Object.entries(data)) {
+          if (key.startsWith('seva')) {
+            localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+            count++;
+          }
+        }
+        alert(`✅ Imported ${count} entries successfully! Page will reload.`);
+        window.location.reload();
+      } catch (err) {
+        alert('❌ Failed to import: Invalid file format.');
+      }
+    };
+    reader.readAsText(file);
+
+    // Reset file input so same file can be re-imported
+    event.target.value = '';
   }
 
   /* ─────────────────────────────────────────────
