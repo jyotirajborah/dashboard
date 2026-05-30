@@ -451,7 +451,8 @@ input, textarea, select {
    3. MAIN CONTENT VIEWS
    ============================================================ */
 .dashboard-view,
-.analytics-view {
+.analytics-view,
+.gantt-view {
   flex: 1;
   padding: var(--sp-4);
   max-width: 1440px;
@@ -461,7 +462,8 @@ input, textarea, select {
 }
 
 .dashboard-view.hidden,
-.analytics-view.hidden {
+.analytics-view.hidden,
+.gantt-view.hidden {
   display: none;
 }
 
@@ -1832,7 +1834,8 @@ input, textarea, select {
   }
 
   .dashboard-view,
-  .analytics-view {
+  .analytics-view,
+  .gantt-view {
     padding: var(--sp-6) var(--sp-8);
   }
 
@@ -1856,7 +1859,8 @@ input, textarea, select {
 /* ── Wide (1440px+) ──────────────────────────────────────── */
 @media (min-width: 1440px) {
   .dashboard-view,
-  .analytics-view {
+  .analytics-view,
+  .gantt-view {
     padding: var(--sp-8) var(--sp-12);
   }
 
