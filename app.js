@@ -198,11 +198,14 @@ class SevaApp {
     this.dom.antifreezeToggle?.addEventListener('click', () => this.toggleAntifreeze());
 
     // --- Export / Import ---
-    document.getElementById('exportBtn')?.addEventListener('click', () => this.exportData());
-    document.getElementById('importBtn')?.addEventListener('click', () => {
-      document.getElementById('importFile')?.click();
+    var exportBtn = document.getElementById('exportBtn');
+    var importBtn = document.getElementById('importBtn');
+    var importFile = document.getElementById('importFile');
+    if (exportBtn) exportBtn.addEventListener('click', () => this.exportData());
+    if (importBtn) importBtn.addEventListener('click', function() {
+      if (importFile) importFile.click();
     });
-    document.getElementById('importFile')?.addEventListener('change', (e) => this.importData(e));
+    if (importFile) importFile.addEventListener('change', (e) => this.importData(e));
 
     // --- Range pills ---
     document.querySelectorAll('.range-pill').forEach((pill) => {
@@ -630,49 +633,66 @@ class SevaApp {
 
   /** Export all Seva data as a JSON file download */
   exportData() {
-    const data = {};
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith('seva')) {
-        try {
-          data[key] = JSON.parse(localStorage.getItem(key));
-        } catch {
-          data[key] = localStorage.getItem(key);
+    try {
+      var data = {};
+      for (var i = 0; i < localStorage.length; i++) {
+        var key = localStorage.key(i);
+        if (key && key.startsWith('seva')) {
+          try {
+            data[key] = JSON.parse(localStorage.getItem(key));
+          } catch(e) {
+            data[key] = localStorage.getItem(key);
+          }
         }
       }
-    }
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    const date = new Date().toISOString().split('T')[0];
-    a.href = url;
-    a.download = `seva-backup-${date}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+      var jsonStr = JSON.stringify(data, null, 2);
+      var blob = new Blob([jsonStr], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var dateStr = new Date().toISOString().split('T')[0];
+
+      // Try download link first
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'seva-backup-' + dateStr + '.json';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+
+      // Fallback: open in new tab if download didn't trigger
+      setTimeout(function() {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 1000);
+
+      alert('✅ Export started! Check your downloads.');
+    } catch(e) {
+      alert('❌ Export failed: ' + e.message);
+    }
   }
 
   /** Import Seva data from a JSON file */
   importData(event) {
-    const file = event.target.files?.[0];
+    var file = event.target.files && event.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
+    var reader = new FileReader();
+    reader.onload = function(e) {
       try {
-        const data = JSON.parse(e.target.result);
-        let count = 0;
-        for (const [key, value] of Object.entries(data)) {
+        var data = JSON.parse(e.target.result);
+        var count = 0;
+        var keys = Object.keys(data);
+        for (var i = 0; i < keys.length; i++) {
+          var key = keys[i];
           if (key.startsWith('seva')) {
+            var value = data[key];
             localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
             count++;
           }
         }
-        alert(`✅ Imported ${count} entries successfully! Page will reload.`);
+        alert('✅ Imported ' + count + ' entries successfully! Page will reload.');
         window.location.reload();
-      } catch (err) {
+      } catch(err) {
         alert('❌ Failed to import: Invalid file format.');
       }
     };
