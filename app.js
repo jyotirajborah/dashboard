@@ -85,8 +85,10 @@ class SevaApp {
     this.dom = {
       dashboardBtn: document.getElementById('dashboardBtn'),
       analyticsBtn: document.getElementById('analyticsBtn'),
+      ganttBtn: document.getElementById('ganttBtn'),
       dashboardView: document.getElementById('dashboardView'),
       analyticsView: document.getElementById('analyticsView'),
+      ganttView: document.getElementById('ganttView'),
 
       // Date nav
       prevDay: document.getElementById('prevDay'),
@@ -190,6 +192,7 @@ class SevaApp {
     // --- View toggle ---
     this.dom.dashboardBtn?.addEventListener('click', () => this.switchView('dashboard'));
     this.dom.analyticsBtn?.addEventListener('click', () => this.switchView('analytics'));
+    this.dom.ganttBtn?.addEventListener('click', () => this.switchView('gantt'));
 
     // --- Anti-freeze toggle ---
     this.dom.antifreezeToggle?.addEventListener('click', () => this.toggleAntifreeze());
@@ -568,16 +571,26 @@ class SevaApp {
    * @param {'dashboard'|'analytics'} view
    */
   switchView(view) {
+    // Hide all views
+    this.dom.dashboardView?.classList.add('hidden');
+    this.dom.analyticsView?.classList.add('hidden');
+    this.dom.ganttView?.classList.add('hidden');
+
+    // Deactivate all toggle buttons
+    this.dom.dashboardBtn?.classList.remove('active');
+    this.dom.analyticsBtn?.classList.remove('active');
+    this.dom.ganttBtn?.classList.remove('active');
+
     if (view === 'analytics') {
-      this.dom.dashboardView?.classList.add('hidden');
       this.dom.analyticsView?.classList.remove('hidden');
-      this.dom.dashboardBtn?.classList.remove('active');
       this.dom.analyticsBtn?.classList.add('active');
       this.renderAnalytics();
+    } else if (view === 'gantt') {
+      this.dom.ganttView?.classList.remove('hidden');
+      this.dom.ganttBtn?.classList.add('active');
+      this.renderGantt();
     } else {
-      this.dom.analyticsView?.classList.add('hidden');
       this.dom.dashboardView?.classList.remove('hidden');
-      this.dom.analyticsBtn?.classList.remove('active');
       this.dom.dashboardBtn?.classList.add('active');
     }
   }
@@ -1140,6 +1153,308 @@ class SevaApp {
     pill.classList.add('active');
     this.analyticsRange = parseInt(pill.getAttribute('data-range'), 10) || 7;
     this.renderAnalytics();
+  }
+
+  /* ─────────────────────────────────────────────
+     GANTT CHART — PROJECT TASKS
+  ───────────────────────────────────────────── */
+
+  static GANTT_KEY = 'seva-gantt-tasks';
+
+  static CATEGORY_COLORS = {
+    deepwork: '#3b82f6',
+    creative: '#8b5cf6',
+    distribution: '#ec4899',
+    system: '#06b6d4',
+    sadhana: '#f59e0b',
+    body: '#10b981',
+    other: '#94a3b8',
+  };
+
+  static CATEGORY_LABELS = {
+    deepwork: '🧠 Deep Work',
+    creative: '🎨 Creative',
+    distribution: '📣 Distribution',
+    system: '🧩 System',
+    sadhana: '🕉 Sadhana',
+    body: '💪 Body',
+    other: '📌 Other',
+  };
+
+  /** Load all gantt tasks from localStorage */
+  loadGanttTasks() {
+    const raw = localStorage.getItem(SevaApp.GANTT_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }
+
+  /** Save all gantt tasks to localStorage */
+  saveGanttTasks(tasks) {
+    localStorage.setItem(SevaApp.GANTT_KEY, JSON.stringify(tasks));
+  }
+
+  /** Generate a simple unique ID */
+  generateId() {
+    return 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+  }
+
+  /** Bind gantt-specific events (called once from init or first render) */
+  bindGanttEvents() {
+    if (this._ganttBound) return;
+    this._ganttBound = true;
+
+    // Add task button
+    document.getElementById('addTaskBtn')?.addEventListener('click', () => this.openTaskModal());
+
+    // Modal close
+    document.getElementById('modalClose')?.addEventListener('click', () => this.closeTaskModal());
+
+    // Modal backdrop click
+    document.getElementById('taskModal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'taskModal') this.closeTaskModal();
+    });
+
+    // Form submit
+    document.getElementById('taskForm')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.saveTask();
+    });
+
+    // Delete button
+    document.getElementById('deleteTaskBtn')?.addEventListener('click', () => this.deleteTask());
+  }
+
+  /** Open the task modal for adding or editing */
+  openTaskModal(task = null) {
+    const modal = document.getElementById('taskModal');
+    const title = document.getElementById('modalTitle');
+    const deleteBtn = document.getElementById('deleteTaskBtn');
+    if (!modal) return;
+
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+
+    if (task) {
+      title.textContent = 'Edit Task';
+      document.getElementById('taskId').value = task.id;
+      document.getElementById('taskName').value = task.name;
+      document.getElementById('taskStart').value = task.startDate;
+      document.getElementById('taskEnd').value = task.endDate;
+      document.getElementById('taskCategory').value = task.category;
+      document.getElementById('taskStatus').value = task.status;
+      document.getElementById('taskNotes').value = task.notes || '';
+      deleteBtn.classList.remove('hidden');
+    } else {
+      title.textContent = 'Add Task';
+      document.getElementById('taskForm').reset();
+      document.getElementById('taskId').value = '';
+      // Default start to today
+      const today = new Date();
+      document.getElementById('taskStart').value = this.toISODate(today);
+      deleteBtn.classList.add('hidden');
+    }
+  }
+
+  /** Close the task modal */
+  closeTaskModal() {
+    const modal = document.getElementById('taskModal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
+
+  /** Save a task (add or update) */
+  saveTask() {
+    const id = document.getElementById('taskId').value;
+    const name = document.getElementById('taskName').value.trim();
+    const startDate = document.getElementById('taskStart').value;
+    const endDate = document.getElementById('taskEnd').value;
+    const category = document.getElementById('taskCategory').value;
+    const status = document.getElementById('taskStatus').value;
+    const notes = document.getElementById('taskNotes').value.trim();
+
+    if (!name || !startDate || !endDate) return;
+
+    const tasks = this.loadGanttTasks();
+
+    if (id) {
+      // Update existing
+      const idx = tasks.findIndex(t => t.id === id);
+      if (idx !== -1) {
+        tasks[idx] = { ...tasks[idx], name, startDate, endDate, category, status, notes };
+      }
+    } else {
+      // Add new
+      tasks.push({ id: this.generateId(), name, startDate, endDate, category, status, notes });
+    }
+
+    this.saveGanttTasks(tasks);
+    this.closeTaskModal();
+    this.renderGantt();
+  }
+
+  /** Delete a task */
+  deleteTask() {
+    const id = document.getElementById('taskId').value;
+    if (!id) return;
+
+    let tasks = this.loadGanttTasks();
+    tasks = tasks.filter(t => t.id !== id);
+    this.saveGanttTasks(tasks);
+    this.closeTaskModal();
+    this.renderGantt();
+  }
+
+  /** Main Gantt render */
+  renderGantt() {
+    this.bindGanttEvents();
+
+    const container = document.getElementById('ganttChart');
+    const emptyMsg = document.getElementById('ganttEmpty');
+    if (!container) return;
+
+    const tasks = this.loadGanttTasks();
+
+    if (!tasks.length) {
+      container.innerHTML = '';
+      if (emptyMsg) emptyMsg.style.display = 'block';
+      return;
+    }
+    if (emptyMsg) emptyMsg.style.display = 'none';
+
+    // Sort by start date
+    tasks.sort((a, b) => a.startDate.localeCompare(b.startDate));
+
+    // Find the overall date range
+    const allStarts = tasks.map(t => new Date(t.startDate + 'T00:00:00'));
+    const allEnds = tasks.map(t => new Date(t.endDate + 'T00:00:00'));
+    let minDate = new Date(Math.min(...allStarts));
+    let maxDate = new Date(Math.max(...allEnds));
+
+    // Add some padding (3 days before, 3 days after)
+    minDate.setDate(minDate.getDate() - 3);
+    maxDate.setDate(maxDate.getDate() + 3);
+
+    const totalDays = Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24)) + 1;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Build header with date columns
+    let html = '';
+
+    // Generate month/day headers
+    const months = [];
+    const days = [];
+    let currDate = new Date(minDate);
+    let prevMonth = '';
+    let monthSpan = 0;
+
+    for (let i = 0; i < totalDays; i++) {
+      const monthLabel = currDate.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+      const dayNum = currDate.getDate();
+      const isToday = currDate.getTime() === today.getTime();
+      const isWeekend = currDate.getDay() === 0 || currDate.getDay() === 6;
+
+      if (monthLabel !== prevMonth) {
+        if (prevMonth) months.push({ label: prevMonth, span: monthSpan });
+        prevMonth = monthLabel;
+        monthSpan = 1;
+      } else {
+        monthSpan++;
+      }
+
+      days.push({ num: dayNum, isToday, isWeekend });
+      currDate.setDate(currDate.getDate() + 1);
+    }
+    if (prevMonth) months.push({ label: prevMonth, span: monthSpan });
+
+    const colW = 32; // pixels per day
+    const labelW = 180; // task label width
+    const chartW = totalDays * colW;
+
+    // Month header row
+    html += `<div style="display:flex;position:sticky;top:0;z-index:2;">`;
+    html += `<div style="min-width:${labelW}px;padding:0.5rem 0.75rem;font-size:0.6875rem;font-weight:600;color:#64748b;background:#0f1432;border-bottom:1px solid rgba(148,163,184,0.08);"></div>`;
+    html += `<div style="display:flex;">`;
+    months.forEach(m => {
+      html += `<div style="width:${m.span * colW}px;text-align:center;padding:0.375rem 0;font-size:0.6875rem;font-weight:600;color:#94a3b8;background:#0f1432;border-bottom:1px solid rgba(148,163,184,0.08);border-left:1px solid rgba(148,163,184,0.06);">${m.label}</div>`;
+    });
+    html += `</div></div>`;
+
+    // Day header row
+    html += `<div style="display:flex;position:sticky;top:28px;z-index:2;">`;
+    html += `<div style="min-width:${labelW}px;padding:0.25rem 0.75rem;font-size:0.625rem;font-weight:500;color:#64748b;background:#0a0e27;border-bottom:1px solid rgba(148,163,184,0.1);"></div>`;
+    html += `<div style="display:flex;">`;
+    days.forEach(d => {
+      const bg = d.isToday ? 'rgba(245,158,11,0.15)' : d.isWeekend ? 'rgba(148,163,184,0.04)' : '#0a0e27';
+      const clr = d.isToday ? '#f59e0b' : d.isWeekend ? '#475569' : '#64748b';
+      html += `<div style="width:${colW}px;text-align:center;padding:0.25rem 0;font-size:0.5625rem;font-weight:${d.isToday ? '700' : '500'};color:${clr};background:${bg};border-bottom:1px solid rgba(148,163,184,0.1);border-left:1px solid rgba(148,163,184,0.04);">${d.num}</div>`;
+    });
+    html += `</div></div>`;
+
+    // Task rows
+    tasks.forEach(task => {
+      const start = new Date(task.startDate + 'T00:00:00');
+      const end = new Date(task.endDate + 'T00:00:00');
+      const startOffset = Math.max(0, Math.ceil((start - minDate) / (1000 * 60 * 60 * 24)));
+      const duration = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1);
+
+      // Determine bar color
+      let barColor;
+      if (task.status === 'completed') {
+        barColor = '#10b981';
+      } else if (task.status === 'in-progress' && end < today) {
+        barColor = '#f43f5e'; // overdue
+      } else if (task.status === 'not-started' && end < today) {
+        barColor = '#f43f5e'; // overdue
+      } else if (task.status === 'in-progress') {
+        barColor = SevaApp.CATEGORY_COLORS[task.category] || '#f59e0b';
+      } else {
+        barColor = '#475569'; // not started
+      }
+
+      const isOverdue = end < today && task.status !== 'completed';
+      const catLabel = SevaApp.CATEGORY_LABELS[task.category] || '📌 Other';
+
+      html += `<div style="display:flex;align-items:center;border-bottom:1px solid rgba(148,163,184,0.06);cursor:pointer;transition:background 0.15s;" class="gantt-row" data-task-id="${task.id}" onmouseover="this.style.background='rgba(148,163,184,0.04)'" onmouseout="this.style.background='transparent'">`;
+
+      // Task label
+      html += `<div style="min-width:${labelW}px;padding:0.5rem 0.75rem;display:flex;flex-direction:column;gap:0.125rem;">`;
+      html += `<span style="font-size:0.8125rem;font-weight:500;color:${task.status === 'completed' ? '#64748b' : '#f8fafc'};${task.status === 'completed' ? 'text-decoration:line-through;' : ''}white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:${labelW - 24}px;">${task.name}</span>`;
+      html += `<span style="font-size:0.625rem;color:#64748b;">${catLabel}${isOverdue ? ' · <span style="color:#f43f5e;font-weight:600;">OVERDUE</span>' : ''}</span>`;
+      html += `</div>`;
+
+      // Bar area
+      html += `<div style="position:relative;width:${chartW}px;height:36px;">`;
+
+      // Today line (in each row for alignment)
+      const todayOffset = Math.ceil((today - minDate) / (1000 * 60 * 60 * 24));
+      if (todayOffset >= 0 && todayOffset < totalDays) {
+        html += `<div style="position:absolute;left:${todayOffset * colW + colW / 2}px;top:0;bottom:0;width:2px;background:rgba(245,158,11,0.3);z-index:1;"></div>`;
+      }
+
+      // The bar
+      const barLeft = startOffset * colW;
+      const barWidth = duration * colW - 2;
+      html += `<div style="position:absolute;left:${barLeft}px;top:8px;width:${barWidth}px;height:20px;background:${barColor};border-radius:4px;opacity:${task.status === 'completed' ? '0.6' : '0.85'};box-shadow:0 1px 4px rgba(0,0,0,0.3);z-index:2;transition:opacity 0.2s;">`;
+      if (barWidth > 40) {
+        html += `<span style="position:absolute;inset:0;display:flex;align-items:center;padding:0 6px;font-size:0.5625rem;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${task.name}</span>`;
+      }
+      html += `</div>`;
+
+      html += `</div>`; // /bar area
+      html += `</div>`; // /row
+    });
+
+    container.innerHTML = html;
+
+    // Bind click on rows to edit
+    container.querySelectorAll('.gantt-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const id = row.getAttribute('data-task-id');
+        const task = this.loadGanttTasks().find(t => t.id === id);
+        if (task) this.openTaskModal(task);
+      });
+    });
   }
 }
 
