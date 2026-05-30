@@ -62,7 +62,7 @@ class SevaApp {
   ];
 
   /** Current analytics range (days) */
-  analyticsRange = 7;
+  analyticsRange = 1;
 
   /* ─────────────────────────────────────────────
      INITIALISATION
@@ -711,6 +711,7 @@ class SevaApp {
 
     const entries = this.getDataForRange(this.analyticsRange);
     this.renderStats(entries);
+    this.renderTodaySummary();
     this.renderCompletionChart(entries);
     this.renderSectionChart(entries);
     this.renderScoresChart(entries);
@@ -753,9 +754,123 @@ class SevaApp {
 
     // Range label
     if (this.dom.rangeLabel) {
-      const labels = { 7: 'Last 7 days', 30: 'Last 30 days', 90: 'Last 90 days', 365: 'Last 365 days' };
+      const labels = { 1: 'Today', 7: 'Last 7 days', 30: 'Last 30 days', 90: 'Last 90 days', 365: 'Last 365 days' };
       this.dom.rangeLabel.textContent = labels[this.analyticsRange] || `Last ${this.analyticsRange} days`;
     }
+  }
+
+  /* ── TODAY'S SUMMARY ── */
+
+  /** Render a detailed breakdown of today's data */
+  renderTodaySummary() {
+    const container = document.getElementById('todaySummaryContent');
+    const card = document.getElementById('todaySummaryCard');
+    if (!container || !card) return;
+
+    // Show/hide based on range
+    if (this.analyticsRange !== 1) {
+      card.style.display = 'none';
+      return;
+    }
+    card.style.display = '';
+
+    const key = this.getDateKey(new Date());
+    const raw = localStorage.getItem(key);
+    const data = raw ? JSON.parse(raw) : null;
+
+    if (!data) {
+      container.innerHTML = `<p style="color:#64748b;font-size:0.875rem;text-align:center;padding:1.5rem 0;">No data recorded today yet. Start filling your dashboard!</p>`;
+      return;
+    }
+
+    const sectionColors = {
+      sadhana: '#f59e0b',
+      body: '#10b981',
+      deepWork: '#3b82f6',
+      creative: '#8b5cf6',
+      distribution: '#ec4899',
+      system: '#06b6d4',
+    };
+
+    let html = '';
+
+    // Per-section progress bars
+    SevaApp.SECTIONS.forEach((section) => {
+      const pct = this.sectionPct(data, section.fields);
+      const checked = section.fields.filter(f => this.getNestedValue(data, f)).length;
+      const total = section.fields.length;
+      const color = sectionColors[section.key] || '#f59e0b';
+
+      html += `
+        <div style="display:flex;flex-direction:column;gap:0.25rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:0.8125rem;font-weight:600;color:#f8fafc;">${section.label}</span>
+            <span style="font-size:0.75rem;font-weight:600;color:${color};">${checked}/${total} · ${pct}%</span>
+          </div>
+          <div style="height:6px;background:rgba(148,163,184,0.12);border-radius:9999px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:${color};border-radius:9999px;transition:width 0.6s cubic-bezier(0.4,0,0.2,1);"></div>
+          </div>
+        </div>`;
+    });
+
+    // Scores row
+    const calm = data.sadhana?.calm ?? '-';
+    const focus = data.sadhana?.focus ?? '-';
+    const devotion = data.sadhana?.devotion ?? '-';
+    const energy = data.body?.energy ?? '-';
+
+    html += `
+      <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:0.5rem;padding-top:0.75rem;border-top:1px solid rgba(148,163,184,0.08);">
+        <div style="flex:1;min-width:60px;text-align:center;padding:0.5rem;background:rgba(96,165,250,0.08);border-radius:8px;">
+          <div style="font-size:1.25rem;font-weight:800;font-family:var(--font-heading);color:#60a5fa;">${calm}</div>
+          <div style="font-size:0.625rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;">Calm</div>
+        </div>
+        <div style="flex:1;min-width:60px;text-align:center;padding:0.5rem;background:rgba(245,158,11,0.08);border-radius:8px;">
+          <div style="font-size:1.25rem;font-weight:800;font-family:var(--font-heading);color:#f59e0b;">${focus}</div>
+          <div style="font-size:0.625rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;">Focus</div>
+        </div>
+        <div style="flex:1;min-width:60px;text-align:center;padding:0.5rem;background:rgba(167,139,250,0.08);border-radius:8px;">
+          <div style="font-size:1.25rem;font-weight:800;font-family:var(--font-heading);color:#a78bfa;">${devotion}</div>
+          <div style="font-size:0.625rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;">Devotion</div>
+        </div>
+        <div style="flex:1;min-width:60px;text-align:center;padding:0.5rem;background:rgba(16,185,129,0.08);border-radius:8px;">
+          <div style="font-size:1.25rem;font-weight:800;font-family:var(--font-heading);color:#10b981;">${energy}</div>
+          <div style="font-size:0.625rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;">Energy</div>
+        </div>
+      </div>`;
+
+    // Shipped + Creative output
+    const shipped = data.deepWork?.shipped;
+    const creative = data.creative?.output;
+    const japa = data.sadhana?.japaMinutes;
+
+    if (shipped || creative || japa) {
+      html += `<div style="margin-top:0.5rem;padding-top:0.75rem;border-top:1px solid rgba(148,163,184,0.08);display:flex;flex-direction:column;gap:0.5rem;">`;
+      if (japa) {
+        html += `<div style="font-size:0.8125rem;color:#94a3b8;">🕉 Japa: <span style="color:#f59e0b;font-weight:600;">${japa} min</span></div>`;
+      }
+      if (shipped) {
+        html += `<div style="font-size:0.8125rem;color:#94a3b8;">🚀 Shipped: <span style="color:#f8fafc;font-weight:500;">${shipped}</span></div>`;
+      }
+      if (creative) {
+        html += `<div style="font-size:0.8125rem;color:#94a3b8;">🎵 Creative: <span style="color:#f8fafc;font-weight:500;">${creative}</span></div>`;
+      }
+      html += `</div>`;
+    }
+
+    // Non-negotiables
+    const nn = data.nonNegotiables?.filter(n => n.trim());
+    if (nn && nn.length) {
+      html += `<div style="margin-top:0.5rem;padding-top:0.75rem;border-top:1px solid rgba(148,163,184,0.08);">`;
+      html += `<div style="font-size:0.6875rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.375rem;">Non-Negotiables</div>`;
+      nn.forEach((n, i) => {
+        const icons = ['🎯', '🙏', '💪'];
+        html += `<div style="font-size:0.8125rem;color:#f8fafc;padding:0.125rem 0;">${icons[i] || '•'} ${n}</div>`;
+      });
+      html += `</div>`;
+    }
+
+    container.innerHTML = html;
   }
 
   /* ── CHART.JS GLOBAL DEFAULTS ── */
