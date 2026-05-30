@@ -10,59 +10,6 @@
 'use strict';
 
 class SevaApp {
-  /** Chart.js instance references for cleanup before re-render */
-  charts = {
-    completion: null,
-    section: null,
-    scores: null,
-    radar: null,
-  };
-
-  /** Currently viewed date (Date object, local midnight) */
-  currentDate = new Date();
-
-  /** SVG progress ring circumference (2 × π × r, r = 52) */
-  static CIRCUMFERENCE = 2 * Math.PI * 52;
-
-  /** Ordered list of all boolean (checkbox) field paths */
-  static BOOLEAN_FIELDS = [
-    'sadhana.japa',
-    'sadhana.meditation',
-    'sadhana.reading',
-    'body.strength',
-    'body.walk',
-    'body.stretching',
-    'deepWork.seo',
-    'deepWork.affiliate',
-    'deepWork.leads',
-    'deepWork.funnel',
-    'deepWork.upload',
-    'deepWork.landingPage',
-    'deepWork.techFixes',
-    'creative.musicPractice',
-    'creative.scriptReel',
-    'creative.creativeExplore',
-    'distribution.postReel',
-    'distribution.pinterestYt',
-    'distribution.blogRepurpose',
-    'distribution.communityEngagement',
-    'system.planning',
-    'system.automation',
-    'system.weeklyStructure',
-  ];
-
-  /** Section definitions for analytics grouping */
-  static SECTIONS = [
-    { key: 'sadhana', label: 'Sadhana', color: '#f59e0b', fields: ['sadhana.japa', 'sadhana.meditation', 'sadhana.reading'] },
-    { key: 'body', label: 'Body', color: '#10b981', fields: ['body.strength', 'body.walk', 'body.stretching'] },
-    { key: 'deepWork', label: 'Deep Work', color: '#3b82f6', fields: ['deepWork.seo', 'deepWork.affiliate', 'deepWork.leads', 'deepWork.funnel', 'deepWork.upload', 'deepWork.landingPage', 'deepWork.techFixes'] },
-    { key: 'creative', label: 'Creative', color: '#8b5cf6', fields: ['creative.musicPractice', 'creative.scriptReel', 'creative.creativeExplore'] },
-    { key: 'distribution', label: 'Distribution', color: '#ec4899', fields: ['distribution.postReel', 'distribution.pinterestYt', 'distribution.blogRepurpose', 'distribution.communityEngagement'] },
-    { key: 'system', label: 'System', color: '#06b6d4', fields: ['system.planning', 'system.automation', 'system.weeklyStructure'] },
-  ];
-
-  /** Current analytics range (days) */
-  analyticsRange = 1;
 
   /* ─────────────────────────────────────────────
      INITIALISATION
@@ -73,6 +20,15 @@ class SevaApp {
    * load today's data, paint the progress ring, and animate cards.
    */
   init() {
+    /** Chart.js instance references for cleanup before re-render */
+    this.charts = { completion: null, section: null, scores: null, radar: null };
+
+    /** Currently viewed date */
+    this.currentDate = new Date();
+
+    /** Current analytics range (days) */
+    this.analyticsRange = 1;
+
     this.cacheDom();
     this.bindEvents();
     this.setDate(new Date());
@@ -1244,27 +1200,7 @@ class SevaApp {
      GANTT CHART — PROJECT TASKS
   ───────────────────────────────────────────── */
 
-  static GANTT_KEY = 'seva-gantt-tasks';
-
-  static CATEGORY_COLORS = {
-    deepwork: '#3b82f6',
-    creative: '#8b5cf6',
-    distribution: '#ec4899',
-    system: '#06b6d4',
-    sadhana: '#f59e0b',
-    body: '#10b981',
-    other: '#94a3b8',
-  };
-
-  static CATEGORY_LABELS = {
-    deepwork: '🧠 Deep Work',
-    creative: '🎨 Creative',
-    distribution: '📣 Distribution',
-    system: '🧩 System',
-    sadhana: '🕉 Sadhana',
-    body: '💪 Body',
-    other: '📌 Other',
-  };
+  // Static constants are defined after the class (see bottom of file)
 
   /** Load all gantt tasks from localStorage */
   loadGanttTasks() {
@@ -1544,11 +1480,78 @@ class SevaApp {
 }
 
 /* ─────────────────────────────────────────────
+   STATIC PROPERTIES (ES2015 compatible)
+───────────────────────────────────────────── */
+
+/** SVG progress ring circumference (2 × π × r, r = 52) */
+SevaApp.CIRCUMFERENCE = 2 * Math.PI * 52;
+
+/** Ordered list of all boolean (checkbox) field paths */
+SevaApp.BOOLEAN_FIELDS = [
+  'sadhana.japa',
+  'sadhana.meditation',
+  'sadhana.reading',
+  'body.strength',
+  'body.walk',
+  'body.stretching',
+  'deepWork.seo',
+  'deepWork.affiliate',
+  'deepWork.leads',
+  'deepWork.funnel',
+  'deepWork.upload',
+  'deepWork.landingPage',
+  'deepWork.techFixes',
+  'creative.musicPractice',
+  'creative.scriptReel',
+  'creative.creativeExplore',
+  'distribution.postReel',
+  'distribution.pinterestYt',
+  'distribution.blogRepurpose',
+  'distribution.communityEngagement',
+  'system.planning',
+  'system.automation',
+  'system.weeklyStructure',
+];
+
+/** Section definitions for analytics grouping */
+SevaApp.SECTIONS = [
+  { key: 'sadhana', label: 'Sadhana', color: '#f59e0b', fields: ['sadhana.japa', 'sadhana.meditation', 'sadhana.reading'] },
+  { key: 'body', label: 'Body', color: '#10b981', fields: ['body.strength', 'body.walk', 'body.stretching'] },
+  { key: 'deepWork', label: 'Deep Work', color: '#3b82f6', fields: ['deepWork.seo', 'deepWork.affiliate', 'deepWork.leads', 'deepWork.funnel', 'deepWork.upload', 'deepWork.landingPage', 'deepWork.techFixes'] },
+  { key: 'creative', label: 'Creative', color: '#8b5cf6', fields: ['creative.musicPractice', 'creative.scriptReel', 'creative.creativeExplore'] },
+  { key: 'distribution', label: 'Distribution', color: '#ec4899', fields: ['distribution.postReel', 'distribution.pinterestYt', 'distribution.blogRepurpose', 'distribution.communityEngagement'] },
+  { key: 'system', label: 'System', color: '#06b6d4', fields: ['system.planning', 'system.automation', 'system.weeklyStructure'] },
+];
+
+/** Gantt chart constants */
+SevaApp.GANTT_KEY = 'seva-gantt-tasks';
+
+SevaApp.CATEGORY_COLORS = {
+  deepwork: '#3b82f6',
+  creative: '#8b5cf6',
+  distribution: '#ec4899',
+  system: '#06b6d4',
+  sadhana: '#f59e0b',
+  body: '#10b981',
+  other: '#94a3b8',
+};
+
+SevaApp.CATEGORY_LABELS = {
+  deepwork: '🧠 Deep Work',
+  creative: '🎨 Creative',
+  distribution: '📣 Distribution',
+  system: '🧩 System',
+  sadhana: '🕉 Sadhana',
+  body: '💪 Body',
+  other: '📌 Other',
+};
+
+/* ─────────────────────────────────────────────
    BOOTSTRAP
 ───────────────────────────────────────────── */
 
-document.addEventListener('DOMContentLoaded', () => {
-  const app = new SevaApp();
+document.addEventListener('DOMContentLoaded', function() {
+  var app = new SevaApp();
   app.init();
 
   // Expose globally for debugging in devtools
