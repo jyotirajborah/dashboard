@@ -43,10 +43,12 @@ class SevaApp {
       analyticsBtn: document.getElementById('analyticsBtn'),
       ganttBtn: document.getElementById('ganttBtn'),
       kanbanBtn: document.getElementById('kanbanBtn'),
+      trackerBtn: document.getElementById('trackerBtn'),
       dashboardView: document.getElementById('dashboardView'),
       analyticsView: document.getElementById('analyticsView'),
       ganttView: document.getElementById('ganttView'),
       kanbanView: document.getElementById('kanbanView'),
+      trackerView: document.getElementById('trackerView'),
 
       // Date nav
       prevDay: document.getElementById('prevDay'),
@@ -152,6 +154,7 @@ class SevaApp {
     this.dom.analyticsBtn?.addEventListener('click', () => this.switchView('analytics'));
     this.dom.ganttBtn?.addEventListener('click', () => this.switchView('gantt'));
     this.dom.kanbanBtn?.addEventListener('click', () => this.switchView('kanban'));
+    this.dom.trackerBtn?.addEventListener('click', () => this.switchView('tracker'));
 
     // --- Anti-freeze toggle ---
     this.dom.antifreezeToggle?.addEventListener('click', () => this.toggleAntifreeze());
@@ -545,12 +548,14 @@ class SevaApp {
     this.dom.analyticsView?.classList.add('hidden');
     this.dom.ganttView?.classList.add('hidden');
     this.dom.kanbanView?.classList.add('hidden');
+    this.dom.trackerView?.classList.add('hidden');
 
     // Deactivate all toggle buttons
     this.dom.dashboardBtn?.classList.remove('active');
     this.dom.analyticsBtn?.classList.remove('active');
     this.dom.ganttBtn?.classList.remove('active');
     this.dom.kanbanBtn?.classList.remove('active');
+    this.dom.trackerBtn?.classList.remove('active');
 
     if (view === 'analytics') {
       this.dom.analyticsView?.classList.remove('hidden');
@@ -564,6 +569,10 @@ class SevaApp {
       this.dom.kanbanView?.classList.remove('hidden');
       this.dom.kanbanBtn?.classList.add('active');
       this.renderKanban();
+    } else if (view === 'tracker') {
+      this.dom.trackerView?.classList.remove('hidden');
+      this.dom.trackerBtn?.classList.add('active');
+      this.renderTracker();
     } else {
       this.dom.dashboardView?.classList.remove('hidden');
       this.dom.dashboardBtn?.classList.add('active');
@@ -1700,6 +1709,351 @@ class SevaApp {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  /* ─────────────────────────────────────────────
+     PROGRESS TRACKER
+  ───────────────────────────────────────────── */
+
+  /** Load tracker items from localStorage */
+  loadTrackerItems() {
+    const raw = localStorage.getItem('seva-tracker-items');
+    return raw ? JSON.parse(raw) : [];
+  }
+
+  /** Save tracker items to localStorage */
+  saveTrackerItems(items) {
+    localStorage.setItem('seva-tracker-items', JSON.stringify(items));
+  }
+
+  /** Generate unique ID */
+  generateTrackerId() {
+    return 'item-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+  }
+
+  /** Bind tracker events */
+  bindTrackerEvents() {
+    document.getElementById('addTrackerItemBtn')?.addEventListener('click', () => this.promptAddTrackerItem());
+  }
+
+  /** Prompt to add a new tracker item */
+  promptAddTrackerItem() {
+    const title = prompt('Enter item title:');
+    if (!title || !title.trim()) return;
+
+    const items = this.loadTrackerItems();
+    items.push({
+      id: this.generateTrackerId(),
+      title: title.trim(),
+      progress: 0,
+      startDate: new Date().toISOString().split('T')[0],
+      notes: '',
+      subItems: [],
+      createdAt: new Date().toISOString(),
+      expanded: true
+    });
+
+    this.saveTrackerItems(items);
+    this.renderTracker();
+  }
+
+  /** Add sub-item to a parent item */
+  addSubItem(parentId) {
+    const title = prompt('Enter sub-item title:');
+    if (!title || !title.trim()) return;
+
+    const items = this.loadTrackerItems();
+    const parent = this.findItemById(items, parentId);
+    
+    if (parent) {
+      if (!parent.subItems) parent.subItems = [];
+      parent.subItems.push({
+        id: this.generateTrackerId(),
+        title: title.trim(),
+        progress: 0,
+        completed: false,
+        date: new Date().toISOString().split('T')[0],
+        notes: ''
+      });
+
+      // Recalculate parent progress
+      this.updateParentProgress(parent);
+      
+      this.saveTrackerItems(items);
+      this.renderTracker();
+    }
+  }
+
+  /** Find item by ID (including nested sub-items) */
+  findItemById(items, id) {
+    for (const item of items) {
+      if (item.id === id) return item;
+      if (item.subItems) {
+        for (const sub of item.subItems) {
+          if (sub.id === id) return sub;
+        }
+      }
+    }
+    return null;
+  }
+
+  /** Update parent progress based on sub-items */
+  updateParentProgress(parent) {
+    if (!parent.subItems || parent.subItems.length === 0) {
+      return;
+    }
+    
+    const completed = parent.subItems.filter(s => s.completed).length;
+    parent.progress = Math.round((completed / parent.subItems.length) * 100);
+  }
+
+  /** Toggle sub-item completion */
+  toggleSubItem(parentId, subId) {
+    const items = this.loadTrackerItems();
+    const parent = this.findItemById(items, parentId);
+    
+    if (parent && parent.subItems) {
+      const subItem = parent.subItems.find(s => s.id === subId);
+      if (subItem) {
+        subItem.completed = !subItem.completed;
+        this.updateParentProgress(parent);
+        this.saveTrackerItems(items);
+        this.renderTracker();
+      }
+    }
+  }
+
+  /** Edit item */
+  editTrackerItem(itemId) {
+    const items = this.loadTrackerItems();
+    const item = this.findItemById(items, itemId);
+    if (!item) return;
+
+    const newTitle = prompt('Edit title:', item.title);
+    if (newTitle === null) return;
+
+    const newNotes = prompt('Edit notes:', item.notes || '');
+    
+    item.title = newTitle.trim() || item.title;
+    item.notes = newNotes !== null ? newNotes.trim() : item.notes;
+
+    this.saveTrackerItems(items);
+    this.renderTracker();
+  }
+
+  /** Update progress manually */
+  updateProgress(itemId, newProgress) {
+    const items = this.loadTrackerItems();
+    const item = this.findItemById(items, itemId);
+    
+    if (item) {
+      item.progress = Math.max(0, Math.min(100, parseInt(newProgress) || 0));
+      this.saveTrackerItems(items);
+      this.renderTracker();
+    }
+  }
+
+  /** Delete tracker item */
+  deleteTrackerItem(itemId) {
+    if (!confirm('Delete this item and all its sub-items?')) return;
+
+    let items = this.loadTrackerItems();
+    items = items.filter(i => i.id !== itemId);
+    
+    this.saveTrackerItems(items);
+    this.renderTracker();
+  }
+
+  /** Delete sub-item */
+  deleteSubItem(parentId, subId) {
+    if (!confirm('Delete this sub-item?')) return;
+
+    const items = this.loadTrackerItems();
+    const parent = this.findItemById(items, parentId);
+    
+    if (parent && parent.subItems) {
+      parent.subItems = parent.subItems.filter(s => s.id !== subId);
+      this.updateParentProgress(parent);
+      this.saveTrackerItems(items);
+      this.renderTracker();
+    }
+  }
+
+  /** Toggle item expansion */
+  toggleExpanded(itemId) {
+    const items = this.loadTrackerItems();
+    const item = this.findItemById(items, itemId);
+    
+    if (item) {
+      item.expanded = !item.expanded;
+      this.saveTrackerItems(items);
+      this.renderTracker();
+    }
+  }
+
+  /** Render tracker view */
+  renderTracker() {
+    this.bindTrackerEvents();
+
+    const items = this.loadTrackerItems();
+    const container = document.getElementById('trackerItemsContainer');
+    const emptyMsg = document.getElementById('trackerEmpty');
+
+    if (!items.length) {
+      if (container) container.style.display = 'none';
+      if (emptyMsg) emptyMsg.style.display = 'block';
+      return;
+    }
+
+    if (container) container.style.display = 'flex';
+    if (emptyMsg) emptyMsg.style.display = 'none';
+
+    container.innerHTML = items.map(item => this.renderTrackerItem(item)).join('');
+
+    // Bind events
+    this.bindTrackerItemEvents();
+  }
+
+  /** Bind events to tracker items */
+  bindTrackerItemEvents() {
+    // Toggle expansion
+    document.querySelectorAll('.tracker-item-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const itemId = btn.getAttribute('data-item-id');
+        this.toggleExpanded(itemId);
+      });
+    });
+
+    // Edit item
+    document.querySelectorAll('.tracker-item-edit').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const itemId = btn.getAttribute('data-item-id');
+        this.editTrackerItem(itemId);
+      });
+    });
+
+    // Delete item
+    document.querySelectorAll('.tracker-item-delete').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const itemId = btn.getAttribute('data-item-id');
+        this.deleteTrackerItem(itemId);
+      });
+    });
+
+    // Add sub-item
+    document.querySelectorAll('.tracker-add-sub').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const itemId = btn.getAttribute('data-item-id');
+        this.addSubItem(itemId);
+      });
+    });
+
+    // Toggle sub-item
+    document.querySelectorAll('.tracker-subitem-check').forEach(check => {
+      check.addEventListener('change', () => {
+        const parentId = check.getAttribute('data-parent-id');
+        const subId = check.getAttribute('data-sub-id');
+        this.toggleSubItem(parentId, subId);
+      });
+    });
+
+    // Delete sub-item
+    document.querySelectorAll('.tracker-subitem-delete').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const parentId = btn.getAttribute('data-parent-id');
+        const subId = btn.getAttribute('data-sub-id');
+        this.deleteSubItem(parentId, subId);
+      });
+    });
+
+    // Progress slider
+    document.querySelectorAll('.tracker-progress-slider').forEach(slider => {
+      slider.addEventListener('input', (e) => {
+        const itemId = slider.getAttribute('data-item-id');
+        const valueSpan = document.getElementById('progress-value-' + itemId);
+        if (valueSpan) valueSpan.textContent = slider.value + '%';
+      });
+
+      slider.addEventListener('change', (e) => {
+        const itemId = slider.getAttribute('data-item-id');
+        this.updateProgress(itemId, slider.value);
+      });
+    });
+  }
+
+  /** Render a single tracker item */
+  renderTrackerItem(item) {
+    const progressColor = item.progress >= 75 ? '#10b981' : item.progress >= 50 ? '#f59e0b' : item.progress >= 25 ? '#f59e0b' : '#94a3b8';
+    const hasSubItems = item.subItems && item.subItems.length > 0;
+    const isExpanded = item.expanded !== false;
+
+    let html = `
+      <div class="tracker-item" data-item-id="${item.id}">
+        <div class="tracker-item-header">
+          <div style="display:flex;align-items:center;gap:0.5rem;flex:1;">
+            ${hasSubItems ? `
+              <button class="tracker-item-toggle" data-item-id="${item.id}" style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;transition:all 0.15s;border-radius:4px;">
+                <span style="transition:transform 0.3s;display:inline-block;transform:rotate(${isExpanded ? '90deg' : '0deg'});">▸</span>
+              </button>
+            ` : '<div style="width:24px;"></div>'}
+            
+            <div style="flex:1;">
+              <h3 class="tracker-item-title">${this.escapeHtml(item.title)}</h3>
+              <div style="display:flex;align-items:center;gap:1rem;margin-top:0.25rem;flex-wrap:wrap;">
+                <span style="font-size:0.75rem;color:var(--text-dim);">📅 ${item.startDate || 'No date'}</span>
+                ${hasSubItems ? `<span style="font-size:0.75rem;color:var(--text-dim);">✓ ${item.subItems.filter(s => s.completed).length}/${item.subItems.length} complete</span>` : ''}
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <button class="tracker-add-sub" data-item-id="${item.id}" title="Add sub-item" style="padding:0.25rem 0.75rem;border-radius:9999px;font-size:0.75rem;font-weight:600;background:rgba(245,158,11,0.15);color:var(--accent-saffron);border:none;cursor:pointer;transition:all 0.15s;">+ Sub</button>
+            <button class="tracker-item-edit" data-item-id="${item.id}" title="Edit" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:rgba(148,163,184,0.08);color:var(--text-muted);border:none;cursor:pointer;transition:all 0.15s;">✏️</button>
+            <button class="tracker-item-delete" data-item-id="${item.id}" title="Delete" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:rgba(244,63,94,0.08);color:var(--clr-danger);border:none;cursor:pointer;transition:all 0.15s;">🗑️</button>
+          </div>
+        </div>
+
+        <div class="tracker-item-progress">
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <input type="range" class="tracker-progress-slider" data-item-id="${item.id}" min="0" max="100" value="${item.progress || 0}" style="flex:1;height:6px;border-radius:9999px;background:rgba(148,163,184,0.12);outline:none;cursor:pointer;" />
+            <span id="progress-value-${item.id}" style="font-family:var(--font-heading);font-weight:700;font-size:0.875rem;color:${progressColor};min-width:45px;text-align:right;">${item.progress || 0}%</span>
+          </div>
+          <div style="height:8px;background:rgba(148,163,184,0.12);border-radius:9999px;overflow:hidden;margin-top:0.5rem;">
+            <div style="height:100%;width:${item.progress || 0}%;background:${progressColor};border-radius:9999px;transition:all 0.6s cubic-bezier(0.4,0,0.2,1);"></div>
+          </div>
+        </div>
+
+        ${item.notes ? `<div class="tracker-item-notes">${this.escapeHtml(item.notes)}</div>` : ''}
+    `;
+
+    // Add sub-items if expanded
+    if (hasSubItems && isExpanded) {
+      html += `<div class="tracker-subitems">`;
+      
+      item.subItems.forEach(subItem => {
+        html += `
+          <div class="tracker-subitem" data-sub-id="${subItem.id}">
+            <input type="checkbox" class="tracker-subitem-check" data-parent-id="${item.id}" data-sub-id="${subItem.id}" ${subItem.completed ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer;flex-shrink:0;" />
+            
+            <div style="flex:1;">
+              <span style="font-size:0.875rem;color:var(--text-primary);${subItem.completed ? 'text-decoration:line-through;color:var(--text-dim);' : ''}">${this.escapeHtml(subItem.title)}</span>
+              <div style="display:flex;align-items:center;gap:1rem;margin-top:0.25rem;">
+                <span style="font-size:0.625rem;color:var(--text-dim);">📅 ${subItem.date || ''}</span>
+                ${subItem.notes ? `<span style="font-size:0.625rem;color:var(--text-dim);">📝 ${this.escapeHtml(subItem.notes)}</span>` : ''}
+              </div>
+            </div>
+
+            <button class="tracker-subitem-delete" data-parent-id="${item.id}" data-sub-id="${subItem.id}" title="Delete" style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:transparent;color:var(--text-dim);font-size:1rem;border:none;cursor:pointer;transition:all 0.15s;opacity:0;">×</button>
+          </div>
+        `;
+      });
+      
+      html += `</div>`;
+    }
+
+    html += `</div>`;
+
+    return html;
   }
 }
 

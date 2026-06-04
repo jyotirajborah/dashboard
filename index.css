@@ -2204,3 +2204,206 @@ input, textarea, select {
   border-bottom-color: rgba(16, 185, 129, 0.2);
 }
 
+
+
+/* ============================================================
+   PROGRESS TRACKER
+   ============================================================ */
+.tracker-view {
+  flex: 1;
+  padding: var(--sp-4);
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  animation: fadeInUp 0.5s var(--ease-out) both;
+}
+
+/* ─ Tracker Item ─ */
+.tracker-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-5);
+  transition: all 0.3s var(--ease-out);
+  animation: fadeInUp 0.4s var(--ease-out) both;
+}
+
+.tracker-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.tracker-item-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+
+.tracker-item-title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: var(--text-md);
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.tracker-item-progress {
+  margin-top: var(--sp-3);
+}
+
+.tracker-item-notes {
+  margin-top: var(--sp-3);
+  padding: var(--sp-3);
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.6;
+  border-left: 3px solid var(--accent-saffron);
+}
+
+/* ─ Sub-items ─ */
+.tracker-subitems {
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: 1px solid rgba(148, 163, 184, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.tracker-subitem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  background: var(--bg-input);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  transition: all 0.2s var(--ease-out);
+}
+
+.tracker-subitem:hover {
+  border-color: rgba(148, 163, 184, 0.2);
+  background: rgba(15, 20, 50, 0.6);
+}
+
+.tracker-subitem:hover .tracker-subitem-delete {
+  opacity: 1;
+}
+
+.tracker-subitem-check {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border: 2px solid var(--border-check);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  transition: all var(--transition-fast);
+}
+
+.tracker-subitem-check:hover {
+  border-color: rgba(245, 158, 11, 0.5);
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.tracker-subitem-check:checked {
+  background: var(--accent-saffron);
+  border-color: var(--accent-saffron);
+  animation: checkBounce 0.35s var(--ease-spring);
+}
+
+.tracker-subitem-check:checked::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 5px;
+  width: 5px;
+  height: 10px;
+  border: 2px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+/* ─ Progress Slider ─ */
+.tracker-progress-slider {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: rgba(148, 163, 184, 0.12);
+  outline: none;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.tracker-progress-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent-saffron);
+  border: 3px solid var(--bg-deep);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4), var(--shadow-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.tracker-progress-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.5), var(--shadow-md);
+}
+
+.tracker-progress-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent-saffron);
+  border: 3px solid var(--bg-deep);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4), var(--shadow-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.tracker-progress-slider::-moz-range-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.5), var(--shadow-md);
+}
+
+/* Button hover effects */
+.tracker-item-toggle:hover,
+.tracker-item-edit:hover,
+.tracker-add-sub:hover {
+  background: rgba(148, 163, 184, 0.15);
+  color: var(--text-primary);
+}
+
+.tracker-item-delete:hover {
+  background: rgba(244, 63, 94, 0.15);
+  color: var(--clr-danger);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tracker-item-header {
+    flex-direction: column;
+  }
+
+  .tracker-item-header > div:last-child {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
