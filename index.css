@@ -217,17 +217,37 @@ input, textarea, select {
   top: 0;
   z-index: var(--z-header);
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-3);
-  padding: var(--sp-3) var(--sp-4);
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
   background: var(--bg-glass);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-card);
   box-shadow: var(--shadow-md);
 }
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px var(--sp-4) 5px;
+  background: rgba(148, 163, 184, 0.04);
+  border-top: 1px solid rgba(148, 163, 184, 0.07);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.header-nav::-webkit-scrollbar { display: none; }
 
 /* ─ App Logo / Title ─ */
 .app-brand {

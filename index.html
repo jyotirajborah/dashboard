@@ -17,16 +17,18 @@
 
     <!-- ═══════════════════════════════════════════════════ HEADER -->
     <header class="main-header">
-      <h1 class="app-title" style="font-family:var(--font-heading);font-weight:800;font-size:1.25rem;background:linear-gradient(135deg,#f59e0b,#d97706);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.02em;flex-shrink:0;">🧭 Seva Dashboard</h1>
+      <div class="header-top">
+        <h1 class="app-title" style="font-family:var(--font-heading);font-weight:800;font-size:1.25rem;background:linear-gradient(135deg,#f59e0b,#d97706);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.02em;flex-shrink:0;">🧭 Seva Dashboard</h1>
 
-      <div class="date-nav" style="display:flex;align-items:center;gap:0.5rem;">
-        <button id="prevDay" class="nav-btn" aria-label="Previous day" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;background:rgba(148,163,184,0.08);color:#94a3b8;font-size:1.125rem;transition:all 0.15s cubic-bezier(0.4,0,0.2,1);border:1px solid transparent;cursor:pointer;">←</button>
-        <span id="currentDate" class="date-display" style="font-family:var(--font-heading);font-weight:600;font-size:0.875rem;color:#f8fafc;min-width:180px;text-align:center;">May 30, 2026</span>
-        <button id="nextDay" class="nav-btn" aria-label="Next day" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;background:rgba(148,163,184,0.08);color:#94a3b8;font-size:1.125rem;transition:all 0.15s cubic-bezier(0.4,0,0.2,1);border:1px solid transparent;cursor:pointer;">→</button>
-        <button id="todayBtn" class="today-btn" style="padding:0.25rem 0.75rem;border-radius:9999px;font-size:0.75rem;font-weight:600;color:#94a3b8;background:rgba(148,163,184,0.08);border:1px solid rgba(148,163,184,0.1);cursor:pointer;transition:all 0.15s;">Today</button>
+        <div class="date-nav" style="display:flex;align-items:center;gap:0.5rem;">
+          <button id="prevDay" class="nav-btn" aria-label="Previous day" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;background:rgba(148,163,184,0.08);color:#94a3b8;font-size:1.125rem;transition:all 0.15s cubic-bezier(0.4,0,0.2,1);border:1px solid transparent;cursor:pointer;">←</button>
+          <span id="currentDate" class="date-display" style="font-family:var(--font-heading);font-weight:600;font-size:0.875rem;color:#f8fafc;min-width:160px;text-align:center;">May 30, 2026</span>
+          <button id="nextDay" class="nav-btn" aria-label="Next day" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;background:rgba(148,163,184,0.08);color:#94a3b8;font-size:1.125rem;transition:all 0.15s cubic-bezier(0.4,0,0.2,1);border:1px solid transparent;cursor:pointer;">→</button>
+          <button id="todayBtn" class="today-btn" style="padding:0.25rem 0.75rem;border-radius:9999px;font-size:0.75rem;font-weight:600;color:#94a3b8;background:rgba(148,163,184,0.08);border:1px solid rgba(148,163,184,0.1);cursor:pointer;transition:all 0.15s;">Today</button>
+        </div>
       </div>
 
-      <div class="view-toggle" style="display:flex;gap:2px;background:rgba(148,163,184,0.06);border-radius:9999px;padding:3px;border:1px solid rgba(148,163,184,0.1);overflow-x:auto;">
+      <div class="header-nav">
         <button id="dashboardBtn" class="toggle-btn active" data-view="dashboard">📋 Dashboard</button>
         <button id="analyticsBtn" class="toggle-btn" data-view="analytics">📊 Analytics</button>
         <button id="ganttBtn" class="toggle-btn" data-view="gantt">📅 Gantt</button>
