@@ -149,6 +149,8 @@ class SevaApp {
     this.dom.dashboardBtn?.addEventListener('click', () => this.switchView('dashboard'));
     this.dom.analyticsBtn?.addEventListener('click', () => this.switchView('analytics'));
     this.dom.ganttBtn?.addEventListener('click', () => this.switchView('gantt'));
+    const kanbanBtn = document.getElementById('kanbanBtn');
+    if (kanbanBtn) kanbanBtn.addEventListener('click', () => this.switchView('kanban'));
 
     // --- Anti-freeze toggle ---
     this.dom.antifreezeToggle?.addEventListener('click', () => this.toggleAntifreeze());
@@ -541,11 +543,15 @@ class SevaApp {
     this.dom.dashboardView?.classList.add('hidden');
     this.dom.analyticsView?.classList.add('hidden');
     this.dom.ganttView?.classList.add('hidden');
+    const kanbanView = document.getElementById('kanbanView');
+    if (kanbanView) kanbanView.classList.add('hidden');
 
     // Deactivate all toggle buttons
     this.dom.dashboardBtn?.classList.remove('active');
     this.dom.analyticsBtn?.classList.remove('active');
     this.dom.ganttBtn?.classList.remove('active');
+    const kanbanBtn = document.getElementById('kanbanBtn');
+    if (kanbanBtn) kanbanBtn.classList.remove('active');
 
     if (view === 'analytics') {
       this.dom.analyticsView?.classList.remove('hidden');
@@ -555,6 +561,10 @@ class SevaApp {
       this.dom.ganttView?.classList.remove('hidden');
       this.dom.ganttBtn?.classList.add('active');
       this.renderGantt();
+    } else if (view === 'kanban') {
+      if (kanbanView) kanbanView.classList.remove('hidden');
+      if (kanbanBtn) kanbanBtn.classList.add('active');
+      this.renderKanban();
     } else {
       this.dom.dashboardView?.classList.remove('hidden');
       this.dom.dashboardBtn?.classList.add('active');
@@ -1476,6 +1486,221 @@ class SevaApp {
         if (task) this.openTaskModal(task);
       });
     });
+  }
+
+  /* ─────────────────────────────────────────────
+     KANBAN BOARD
+  ───────────────────────────────────────────── */
+
+  /** Load kanban cards from localStorage */
+  loadKanbanCards() {
+    const raw = localStorage.getItem('seva-kanban-cards');
+    return raw ? JSON.parse(raw) : [];
+  }
+
+  /** Save kanban cards to localStorage */
+  saveKanbanCards(cards) {
+    localStorage.setItem('seva-kanban-cards', JSON.stringify(cards));
+  }
+
+  /** Generate unique ID */
+  generateKanbanId() {
+    return 'card-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+  }
+
+  /** Bind kanban events */
+  bindKanbanEvents() {
+    // Add card button
+    document.getElementById('addKanbanCardBtn')?.addEventListener('click', () => this.promptAddCard());
+
+    // Enable drag and drop
+    this.setupKanbanDragDrop();
+  }
+
+  /** Setup drag and drop for kanban */
+  setupKanbanDragDrop() {
+    const columns = document.querySelectorAll('.kanban-column-body');
+    
+    columns.forEach(column => {
+      column.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        column.style.background = 'rgba(245, 158, 11, 0.08)';
+      });
+
+      column.addEventListener('dragleave', (e) => {
+        column.style.background = '';
+      });
+
+      column.addEventListener('drop', (e) => {
+        e.preventDefault();
+        column.style.background = '';
+        
+        const cardId = e.dataTransfer.getData('text/plain');
+        const targetColumn = column.getAttribute('data-column');
+        
+        this.moveCard(cardId, targetColumn);
+      });
+    });
+  }
+
+  /** Move card to different column */
+  moveCard(cardId, newColumn) {
+    const cards = this.loadKanbanCards();
+    const card = cards.find(c => c.id === cardId);
+    
+    if (card) {
+      card.status = newColumn;
+      this.saveKanbanCards(cards);
+      this.renderKanban();
+    }
+  }
+
+  /** Prompt to add a new card */
+  promptAddCard() {
+    const title = prompt('Enter card title:');
+    if (!title || !title.trim()) return;
+
+    const description = prompt('Enter card description (optional):') || '';
+    
+    const cards = this.loadKanbanCards();
+    cards.push({
+      id: this.generateKanbanId(),
+      title: title.trim(),
+      description: description.trim(),
+      status: 'todo',
+      createdAt: new Date().toISOString(),
+      priority: 'medium'
+    });
+
+    this.saveKanbanCards(cards);
+    this.renderKanban();
+  }
+
+  /** Edit a card */
+  editCard(cardId) {
+    const cards = this.loadKanbanCards();
+    const card = cards.find(c => c.id === cardId);
+    if (!card) return;
+
+    const newTitle = prompt('Edit card title:', card.title);
+    if (newTitle === null) return;
+
+    const newDesc = prompt('Edit card description:', card.description);
+    if (newDesc === null) return;
+
+    card.title = newTitle.trim() || card.title;
+    card.description = newDesc !== null ? newDesc.trim() : card.description;
+
+    this.saveKanbanCards(cards);
+    this.renderKanban();
+  }
+
+  /** Delete a card */
+  deleteCard(cardId) {
+    if (!confirm('Delete this card?')) return;
+
+    let cards = this.loadKanbanCards();
+    cards = cards.filter(c => c.id !== cardId);
+    
+    this.saveKanbanCards(cards);
+    this.renderKanban();
+  }
+
+  /** Render kanban board */
+  renderKanban() {
+    this.bindKanbanEvents();
+
+    const cards = this.loadKanbanCards();
+    const emptyMsg = document.getElementById('kanbanEmpty');
+    const board = document.getElementById('kanbanBoard');
+
+    if (!cards.length) {
+      if (board) board.style.display = 'none';
+      if (emptyMsg) emptyMsg.style.display = 'block';
+      return;
+    }
+
+    if (board) board.style.display = 'grid';
+    if (emptyMsg) emptyMsg.style.display = 'none';
+
+    // Group cards by status
+    const columns = {
+      todo: cards.filter(c => c.status === 'todo'),
+      inprogress: cards.filter(c => c.status === 'inprogress'),
+      review: cards.filter(c => c.status === 'review'),
+      done: cards.filter(c => c.status === 'done')
+    };
+
+    // Update column counts
+    document.getElementById('todoCount').textContent = columns.todo.length;
+    document.getElementById('inprogressCount').textContent = columns.inprogress.length;
+    document.getElementById('reviewCount').textContent = columns.review.length;
+    document.getElementById('doneCount').textContent = columns.done.length;
+
+    // Render each column
+    ['todo', 'inprogress', 'review', 'done'].forEach(status => {
+      const columnEl = document.getElementById(status + 'Column');
+      if (!columnEl) return;
+
+      columnEl.innerHTML = columns[status].map(card => this.renderKanbanCard(card)).join('');
+
+      // Add event listeners to cards
+      columnEl.querySelectorAll('.kanban-card').forEach(cardEl => {
+        const cardId = cardEl.getAttribute('data-card-id');
+
+        // Drag events
+        cardEl.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('text/plain', cardId);
+          cardEl.style.opacity = '0.5';
+        });
+
+        cardEl.addEventListener('dragend', (e) => {
+          cardEl.style.opacity = '1';
+        });
+
+        // Edit on click
+        cardEl.querySelector('.kanban-card-content')?.addEventListener('click', () => {
+          this.editCard(cardId);
+        });
+
+        // Delete button
+        cardEl.querySelector('.kanban-card-delete')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.deleteCard(cardId);
+        });
+      });
+    });
+  }
+
+  /** Render a single kanban card */
+  renderKanbanCard(card) {
+    const priorityColors = {
+      low: '#10b981',
+      medium: '#f59e0b',
+      high: '#f43f5e'
+    };
+
+    const priorityColor = priorityColors[card.priority] || '#94a3b8';
+
+    return `
+      <div class="kanban-card" data-card-id="${card.id}" draggable="true">
+        <div class="kanban-card-header">
+          <div class="kanban-card-priority" style="background:${priorityColor};"></div>
+          <button class="kanban-card-delete" title="Delete card">×</button>
+        </div>
+        <div class="kanban-card-content">
+          <h4 class="kanban-card-title">${this.escapeHtml(card.title)}</h4>
+          ${card.description ? `<p class="kanban-card-description">${this.escapeHtml(card.description)}</p>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  /** Escape HTML to prevent XSS */
+  escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 }
 

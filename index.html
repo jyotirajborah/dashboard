@@ -30,6 +30,7 @@
         <button id="dashboardBtn" class="toggle-btn active" data-view="dashboard">📋 Dashboard</button>
         <button id="analyticsBtn" class="toggle-btn" data-view="analytics">📊 Analytics</button>
         <button id="ganttBtn" class="toggle-btn" data-view="gantt">📅 Gantt</button>
+        <button id="kanbanBtn" class="toggle-btn" data-view="kanban">📊 Kanban</button>
       </div>
 
     </header>
@@ -439,6 +440,72 @@
         </div>
 
       </div><!-- /gantt-view -->
+
+      <!-- ─────────────────────────── KANBAN VIEW ─────────────────────────── -->
+      <div class="kanban-view hidden" id="kanbanView">
+
+        <!-- Header row -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:0.75rem;">
+          <h2 style="font-family:var(--font-heading);font-weight:700;font-size:1.25rem;">📊 Kanban Board</h2>
+          <button id="addKanbanCardBtn" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.5rem 1rem;border-radius:9999px;font-size:0.8125rem;font-weight:600;background:linear-gradient(135deg,#f59e0b,#d97706);color:#0a0e27;border:none;cursor:pointer;box-shadow:0 2px 10px rgba(245,158,11,0.3);transition:all 0.15s;">+ Add Card</button>
+        </div>
+
+        <!-- Kanban Board Container -->
+        <div class="kanban-board" id="kanbanBoard">
+          
+          <!-- Column: To Do -->
+          <div class="kanban-column" data-column="todo">
+            <div class="kanban-column-header">
+              <h3 class="kanban-column-title">📝 To Do</h3>
+              <span class="kanban-column-count" id="todoCount">0</span>
+            </div>
+            <div class="kanban-column-body" id="todoColumn" data-column="todo">
+              <!-- Cards will be dynamically inserted here -->
+            </div>
+          </div>
+
+          <!-- Column: In Progress -->
+          <div class="kanban-column" data-column="inprogress">
+            <div class="kanban-column-header">
+              <h3 class="kanban-column-title">🚀 In Progress</h3>
+              <span class="kanban-column-count" id="inprogressCount">0</span>
+            </div>
+            <div class="kanban-column-body" id="inprogressColumn" data-column="inprogress">
+              <!-- Cards will be dynamically inserted here -->
+            </div>
+          </div>
+
+          <!-- Column: Review -->
+          <div class="kanban-column" data-column="review">
+            <div class="kanban-column-header">
+              <h3 class="kanban-column-title">👀 Review</h3>
+              <span class="kanban-column-count" id="reviewCount">0</span>
+            </div>
+            <div class="kanban-column-body" id="reviewColumn" data-column="review">
+              <!-- Cards will be dynamically inserted here -->
+            </div>
+          </div>
+
+          <!-- Column: Done -->
+          <div class="kanban-column" data-column="done">
+            <div class="kanban-column-header">
+              <h3 class="kanban-column-title">✅ Done</h3>
+              <span class="kanban-column-count" id="doneCount">0</span>
+            </div>
+            <div class="kanban-column-body" id="doneColumn" data-column="done">
+              <!-- Cards will be dynamically inserted here -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Empty State -->
+        <div id="kanbanEmpty" style="text-align:center;padding:3rem 1.5rem;color:#64748b;font-size:0.875rem;display:none;">
+          <p style="font-size:2rem;margin-bottom:0.5rem;">📊</p>
+          <p>No cards yet. Click <strong>+ Add Card</strong> to create your first task card.</p>
+        </div>
+
+      </div><!-- /kanban-view -->
 
       <!-- ─────────────────────────── ADD/EDIT TASK MODAL ─────────────────────────── -->
       <div id="taskModal" class="hidden" style="position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);">
