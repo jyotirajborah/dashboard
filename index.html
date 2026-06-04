@@ -32,6 +32,7 @@
         <button id="ganttBtn" class="toggle-btn" data-view="gantt">📅 Gantt</button>
         <button id="kanbanBtn" class="toggle-btn" data-view="kanban">🗂️ Kanban</button>
         <button id="trackerBtn" class="toggle-btn" data-view="tracker">📈 Tracker</button>
+        <button id="terminalBtn" class="toggle-btn" data-view="terminal">⚡ Terminal</button>
       </div>
 
     </header>
@@ -529,6 +530,128 @@
         </div>
 
       </div><!-- /tracker-view -->
+
+      <!-- ─────────────────────────── BLOOMBERG TERMINAL VIEW ──────────────────────── -->
+      <div class="terminal-view hidden" id="terminalView">
+
+        <!-- Terminal Header Bar -->
+        <div class="bbt-header">
+          <div class="bbt-logo">⚡ SEVA TERMINAL</div>
+          <div class="bbt-clock" id="bbtClock">--:--:--</div>
+          <div class="bbt-tabs">
+            <button class="bbt-tab active" data-panel="watchlist">WATCHLIST</button>
+            <button class="bbt-tab" data-panel="news">NEWS FEED</button>
+            <button class="bbt-tab" data-panel="notes">TRADE NOTES</button>
+          </div>
+        </div>
+
+        <!-- Terminal Grid -->
+        <div class="bbt-grid">
+
+          <!-- LEFT: Market Ticker Bar -->
+          <div class="bbt-ticker-bar">
+            <div id="bbtTickerInner" class="bbt-ticker-inner"></div>
+          </div>
+
+          <!-- MAIN AREA -->
+          <div class="bbt-main">
+
+            <!-- PANEL: Watchlist -->
+            <div class="bbt-panel" id="panelWatchlist">
+              <div class="bbt-panel-header">
+                <span class="bbt-panel-title">▸ WATCHLIST</span>
+                <div style="display:flex;gap:0.5rem;align-items:center;">
+                  <input id="bbtAddSymbol" class="bbt-input" placeholder="Add symbol e.g. AAPL" style="width:160px;" />
+                  <button id="bbtAddBtn" class="bbt-action-btn">+ ADD</button>
+                  <button id="bbtRefreshBtn" class="bbt-action-btn">↺ REFRESH</button>
+                </div>
+              </div>
+              <div class="bbt-table-wrap">
+                <table class="bbt-table">
+                  <thead>
+                    <tr>
+                      <th>SYMBOL</th>
+                      <th>PRICE</th>
+                      <th>CHG</th>
+                      <th>CHG %</th>
+                      <th>HIGH</th>
+                      <th>LOW</th>
+                      <th>VOLUME</th>
+                      <th>NOTE</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="bbtWatchlistBody">
+                    <tr><td colspan="9" class="bbt-empty">Loading watchlist...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- PANEL: News Feed -->
+            <div class="bbt-panel hidden" id="panelNews">
+              <div class="bbt-panel-header">
+                <span class="bbt-panel-title">▸ MARKET NEWS FEED</span>
+                <button id="bbtNewsRefresh" class="bbt-action-btn">↺ REFRESH</button>
+              </div>
+              <div id="bbtNewsFeed" class="bbt-news-feed">
+                <div class="bbt-empty">Loading news...</div>
+              </div>
+            </div>
+
+            <!-- PANEL: Trade Notes -->
+            <div class="bbt-panel hidden" id="panelNotes">
+              <div class="bbt-panel-header">
+                <span class="bbt-panel-title">▸ TRADE NOTES</span>
+                <button id="bbtAddNoteBtn" class="bbt-action-btn">+ NEW NOTE</button>
+              </div>
+              <div id="bbtNotesContainer" class="bbt-notes-container">
+                <div class="bbt-empty">No notes yet. Add your first trade note.</div>
+              </div>
+            </div>
+
+          </div><!-- /bbt-main -->
+
+          <!-- RIGHT SIDEBAR: Stats + Mini Chart -->
+          <div class="bbt-sidebar">
+            <div class="bbt-sidebar-section">
+              <div class="bbt-sidebar-title">▸ MARKET INDICES</div>
+              <div id="bbtIndices" class="bbt-indices"></div>
+            </div>
+            <div class="bbt-sidebar-section">
+              <div class="bbt-sidebar-title">▸ PORTFOLIO STATS</div>
+              <div id="bbtPortfolioStats" class="bbt-stats-grid"></div>
+            </div>
+            <div class="bbt-sidebar-section">
+              <div class="bbt-sidebar-title">▸ QUICK CALC</div>
+              <div class="bbt-calc">
+                <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
+                  <input id="calcBuy" class="bbt-input" placeholder="Buy price" type="number" step="0.01" />
+                  <input id="calcSell" class="bbt-input" placeholder="Sell price" type="number" step="0.01" />
+                </div>
+                <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
+                  <input id="calcQty" class="bbt-input" placeholder="Qty" type="number" />
+                  <button id="calcBtn" class="bbt-action-btn" style="flex:1;">CALC P&L</button>
+                </div>
+                <div id="calcResult" class="bbt-calc-result"></div>
+              </div>
+            </div>
+            <div class="bbt-sidebar-section">
+              <div class="bbt-sidebar-title">▸ ALERTS LOG</div>
+              <div id="bbtAlerts" class="bbt-alerts"></div>
+            </div>
+          </div>
+
+        </div><!-- /bbt-grid -->
+
+        <!-- Bottom Status Bar -->
+        <div class="bbt-statusbar">
+          <span id="bbtStatus">READY</span>
+          <span>DATA: SIMULATED (for demo)</span>
+          <span id="bbtLastUpdate">Last update: --</span>
+        </div>
+
+      </div><!-- /terminal-view -->
 
       <!-- ─────────────────────────── ADD/EDIT TASK MODAL ─────────────────────────── -->
       <div id="taskModal" class="hidden" style="position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);">

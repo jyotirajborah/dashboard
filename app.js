@@ -44,11 +44,13 @@ class SevaApp {
       ganttBtn: document.getElementById('ganttBtn'),
       kanbanBtn: document.getElementById('kanbanBtn'),
       trackerBtn: document.getElementById('trackerBtn'),
+      terminalBtn: document.getElementById('terminalBtn'),
       dashboardView: document.getElementById('dashboardView'),
       analyticsView: document.getElementById('analyticsView'),
       ganttView: document.getElementById('ganttView'),
       kanbanView: document.getElementById('kanbanView'),
       trackerView: document.getElementById('trackerView'),
+      terminalView: document.getElementById('terminalView'),
 
       // Date nav
       prevDay: document.getElementById('prevDay'),
@@ -154,7 +156,11 @@ class SevaApp {
     this.dom.analyticsBtn?.addEventListener('click', () => this.switchView('analytics'));
     this.dom.ganttBtn?.addEventListener('click', () => this.switchView('gantt'));
     this.dom.kanbanBtn?.addEventListener('click', () => this.switchView('kanban'));
-    this.dom.trackerBtn?.addEventListener('click', () => this.switchView('tracker'));
+    this.dom.trackerBtn?.addEventListener('click', () => {
+      console.log('Tracker button clicked!');
+      this.switchView('tracker');
+    });
+    this.dom.terminalBtn?.addEventListener('click', () => this.switchView('terminal'));
 
     // --- Anti-freeze toggle ---
     this.dom.antifreezeToggle?.addEventListener('click', () => this.toggleAntifreeze());
@@ -549,6 +555,7 @@ class SevaApp {
     this.dom.ganttView?.classList.add('hidden');
     this.dom.kanbanView?.classList.add('hidden');
     this.dom.trackerView?.classList.add('hidden');
+    this.dom.terminalView?.classList.add('hidden');
 
     // Deactivate all toggle buttons
     this.dom.dashboardBtn?.classList.remove('active');
@@ -556,6 +563,7 @@ class SevaApp {
     this.dom.ganttBtn?.classList.remove('active');
     this.dom.kanbanBtn?.classList.remove('active');
     this.dom.trackerBtn?.classList.remove('active');
+    this.dom.terminalBtn?.classList.remove('active');
 
     if (view === 'analytics') {
       this.dom.analyticsView?.classList.remove('hidden');
@@ -573,6 +581,10 @@ class SevaApp {
       this.dom.trackerView?.classList.remove('hidden');
       this.dom.trackerBtn?.classList.add('active');
       this.renderTracker();
+    } else if (view === 'terminal') {
+      this.dom.terminalView?.classList.remove('hidden');
+      this.dom.terminalBtn?.classList.add('active');
+      this.initTerminal();
     } else {
       this.dom.dashboardView?.classList.remove('hidden');
       this.dom.dashboardBtn?.classList.add('active');
@@ -2055,11 +2067,312 @@ class SevaApp {
 
     return html;
   }
-}
 
-/* ─────────────────────────────────────────────
-   STATIC PROPERTIES (ES2015 compatible)
-───────────────────────────────────────────── */
+  /* ─────────────────────────────────────────────
+     BLOOMBERG-STYLE TERMINAL
+  ───────────────────────────────────────────── */
+
+  initTerminal() {
+    if (!this._terminalBound) {
+      this._terminalBound = true;
+      this._terminalWatchlist = this.loadTerminalWatchlist();
+      this._terminalNotes     = this.loadTerminalNotes();
+      this._terminalPanel     = 'watchlist';
+      this.bindTerminalEvents();
+      this.startTerminalClock();
+    }
+    this.renderTerminalPanel(this._terminalPanel);
+    this.renderTerminalSidebar();
+    this.renderTickerBar();
+  }
+
+  bindTerminalEvents() {
+    document.querySelectorAll('.bbt-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.bbt-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        this._terminalPanel = tab.getAttribute('data-panel');
+        this.renderTerminalPanel(this._terminalPanel);
+      });
+    });
+    document.getElementById('bbtAddBtn')?.addEventListener('click', () => this.terminalAddSymbol());
+    document.getElementById('bbtAddSymbol')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') this.terminalAddSymbol();
+    });
+    document.getElementById('bbtRefreshBtn')?.addEventListener('click', () => this.terminalRefreshQuotes());
+    document.getElementById('bbtNewsRefresh')?.addEventListener('click', () => this.renderNewsFeed());
+    document.getElementById('bbtAddNoteBtn')?.addEventListener('click', () => this.terminalAddNote());
+    document.getElementById('calcBtn')?.addEventListener('click', () => this.terminalCalcPnl());
+  }
+
+  startTerminalClock() {
+    const tick = () => {
+      const el = document.getElementById('bbtClock');
+      if (el) el.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
+    };
+    tick();
+    setInterval(tick, 1000);
+  }
+
+  loadTerminalWatchlist() {
+    const raw = localStorage.getItem('seva-terminal-watchlist');
+    if (raw) return JSON.parse(raw);
+    return [
+      { symbol: 'AAPL', note: '' }, { symbol: 'TSLA', note: '' },
+      { symbol: 'NVDA', note: '' }, { symbol: 'NIFTY', note: '' },
+      { symbol: 'GOLD', note: '' },
+    ];
+  }
+  saveTerminalWatchlist() {
+    localStorage.setItem('seva-terminal-watchlist', JSON.stringify(this._terminalWatchlist));
+  }
+
+  loadTerminalNotes() {
+    const raw = localStorage.getItem('seva-terminal-notes');
+    return raw ? JSON.parse(raw) : [];
+  }
+  saveTerminalNotes() {
+    localStorage.setItem('seva-terminal-notes', JSON.stringify(this._terminalNotes));
+  }
+
+  generateQuote(symbol) {
+    const bases = {
+      AAPL:185, TSLA:245, NVDA:890, MSFT:415, GOOGL:172, AMZN:195,
+      META:510, NFLX:650, AMD:162, INTC:30, NIFTY:24800, SENSEX:81500,
+      GOLD:2330, SILVER:27, BTC:68000, ETH:3800, SPY:535, QQQ:460,
+    };
+    const base   = bases[symbol.toUpperCase()] || (100 + Math.random() * 400);
+    const chgPct = +(Math.random() * 6 - 3).toFixed(2);
+    const price  = +(base * (1 + chgPct / 100)).toFixed(2);
+    const chg    = +(price - base).toFixed(2);
+    const high   = +(price * (1 + Math.random() * 0.015)).toFixed(2);
+    const low    = +(price * (1 - Math.random() * 0.015)).toFixed(2);
+    const vol    = Math.floor(Math.random() * 50_000_000 + 1_000_000);
+    return { symbol: symbol.toUpperCase(), price, chg, chgPct, high, low, vol };
+  }
+
+  fmtNum(n) {
+    return n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(0)+'K' : n;
+  }
+  fmtPrice(n) {
+    return n >= 10000 ? n.toLocaleString('en-IN') : (+n).toFixed(2);
+  }
+
+  renderWatchlistPanel() {
+    const tbody = document.getElementById('bbtWatchlistBody');
+    if (!tbody) return;
+    if (!this._terminalWatchlist.length) {
+      tbody.innerHTML = `<tr><td colspan="9" class="bbt-empty">No symbols. Add one above.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = this._terminalWatchlist.map((item, idx) => {
+      const q   = this.generateQuote(item.symbol);
+      const up  = q.chg >= 0;
+      const clr = up ? '#00e676' : '#ff5252';
+      const arr = up ? '▲' : '▼';
+      return `<tr class="bbt-row">
+        <td class="bbt-symbol">${q.symbol}</td>
+        <td class="bbt-price">${this.fmtPrice(q.price)}</td>
+        <td style="color:${clr};font-weight:700;">${arr} ${Math.abs(q.chg)}</td>
+        <td style="color:${clr};font-weight:700;">${arr} ${Math.abs(q.chgPct)}%</td>
+        <td class="bbt-dim">${this.fmtPrice(q.high)}</td>
+        <td class="bbt-dim">${this.fmtPrice(q.low)}</td>
+        <td class="bbt-dim">${this.fmtNum(q.vol)}</td>
+        <td><input class="bbt-input bbt-note-input" placeholder="Note..." value="${this.escapeHtml(item.note||'')}" data-idx="${idx}" style="width:120px;" /></td>
+        <td><button class="bbt-remove-btn" data-idx="${idx}">✕</button></td>
+      </tr>`;
+    }).join('');
+    tbody.querySelectorAll('.bbt-note-input').forEach(inp => {
+      inp.addEventListener('blur', () => {
+        this._terminalWatchlist[+inp.getAttribute('data-idx')].note = inp.value;
+        this.saveTerminalWatchlist();
+      });
+    });
+    tbody.querySelectorAll('.bbt-remove-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        this._terminalWatchlist.splice(+btn.getAttribute('data-idx'), 1);
+        this.saveTerminalWatchlist();
+        this.renderWatchlistPanel();
+        this.renderTickerBar();
+      });
+    });
+    const lu = document.getElementById('bbtLastUpdate');
+    if (lu) lu.textContent = 'Last update: ' + new Date().toLocaleTimeString();
+    const st = document.getElementById('bbtStatus');
+    if (st) st.textContent = 'QUOTES REFRESHED — ' + this._terminalWatchlist.length + ' symbols';
+  }
+
+  terminalAddSymbol() {
+    const inp = document.getElementById('bbtAddSymbol');
+    if (!inp) return;
+    const sym = inp.value.trim().toUpperCase();
+    if (!sym) return;
+    if (this._terminalWatchlist.find(i => i.symbol === sym)) {
+      this.terminalAlert(sym + ' already in watchlist', 'warn'); return;
+    }
+    this._terminalWatchlist.push({ symbol: sym, note: '' });
+    this.saveTerminalWatchlist();
+    inp.value = '';
+    this.renderWatchlistPanel();
+    this.renderTickerBar();
+    this.terminalAlert(sym + ' added', 'info');
+  }
+
+  terminalRefreshQuotes() {
+    this.renderWatchlistPanel();
+    this.renderTickerBar();
+    this.renderTerminalSidebar();
+  }
+
+  renderTickerBar() {
+    const inner = document.getElementById('bbtTickerInner');
+    if (!inner) return;
+    const syms = [...this._terminalWatchlist.map(i => i.symbol),
+      'SPY', 'QQQ', 'BTC', 'GOLD', 'NIFTY', 'ETH'];
+    const html = syms.map(sym => {
+      const q  = this.generateQuote(sym);
+      const up = q.chg >= 0;
+      const clr = up ? '#00e676' : '#ff5252';
+      return `<span class="bbt-ticker-item">
+        <span class="bbt-ticker-sym">${q.symbol}</span>
+        <span class="bbt-ticker-price">${this.fmtPrice(q.price)}</span>
+        <span style="color:${clr}">${up?'▲':'▼'}${Math.abs(q.chgPct)}%</span>
+      </span>`;
+    }).join('');
+    inner.innerHTML = html + html;
+  }
+
+  renderNewsFeed() {
+    const container = document.getElementById('bbtNewsFeed');
+    if (!container) return;
+    const headlines = [
+      { tag:'MARKETS', time:'09:32', text:'Global equities rally on strong US jobs data; Nifty hits fresh highs.' },
+      { tag:'TECH',    time:'09:45', text:'NVIDIA reports record data-center revenue; AI chip demand surges.' },
+      { tag:'MACRO',   time:'10:01', text:'Fed minutes signal one more rate cut possible in 2026 if inflation cools.' },
+      { tag:'CRYPTO',  time:'10:14', text:'Bitcoin holds above $68K; ETF inflows reach $500M in a single day.' },
+      { tag:'INDIA',   time:'10:28', text:'RBI holds repo rate at 6.5%; Governor signals easing bias for Q3.' },
+      { tag:'ENERGY',  time:'10:45', text:'Crude oil dips as OPEC+ signals output increase; WTI below $80.' },
+      { tag:'EARNINGS',time:'11:00', text:'Apple beats Q2 estimates on Services growth; buyback expanded to $110B.' },
+      { tag:'FOREX',   time:'11:15', text:'USD/INR stable near 83.40; Dollar index at 104 ahead of CPI release.' },
+      { tag:'GOLD',    time:'11:30', text:'Gold retreats from record highs; strong dollar weighs on safe havens.' },
+      { tag:'IPO',     time:'12:00', text:'Upcoming IPO pipeline robust; 3 major listings expected this quarter.' },
+    ];
+    container.innerHTML = headlines.map(h =>
+      `<div class="bbt-news-item">
+        <span class="bbt-news-tag">${h.tag}</span>
+        <span class="bbt-news-time">${h.time}</span>
+        <span class="bbt-news-text">${h.text}</span>
+      </div>`).join('');
+    const st = document.getElementById('bbtStatus');
+    if (st) st.textContent = 'NEWS UPDATED — ' + new Date().toLocaleTimeString();
+  }
+
+  terminalAddNote() {
+    const symbol = prompt('Symbol (optional):') || '';
+    const text   = prompt('Note text:');
+    if (!text || !text.trim()) return;
+    this._terminalNotes.unshift({
+      id: Date.now(), symbol: symbol.toUpperCase(),
+      text: text.trim(), ts: new Date().toLocaleString()
+    });
+    this.saveTerminalNotes();
+    this.renderNotesPanel();
+  }
+
+  renderNotesPanel() {
+    const container = document.getElementById('bbtNotesContainer');
+    if (!container) return;
+    if (!this._terminalNotes.length) {
+      container.innerHTML = `<div class="bbt-empty">No notes yet.</div>`; return;
+    }
+    container.innerHTML = this._terminalNotes.map(note =>
+      `<div class="bbt-note-card">
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
+          ${note.symbol ? `<span class="bbt-symbol" style="font-size:0.75rem;">${note.symbol}</span>` : ''}
+          <span class="bbt-note-ts">${note.ts}</span>
+          <button class="bbt-remove-btn" data-note-id="${note.id}" style="margin-left:auto;">✕</button>
+        </div>
+        <div class="bbt-note-text">${this.escapeHtml(note.text)}</div>
+      </div>`).join('');
+    container.querySelectorAll('.bbt-remove-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = +btn.getAttribute('data-note-id');
+        this._terminalNotes = this._terminalNotes.filter(n => n.id !== id);
+        this.saveTerminalNotes();
+        this.renderNotesPanel();
+      });
+    });
+  }
+
+  renderTerminalSidebar() {
+    const indicesEl = document.getElementById('bbtIndices');
+    if (indicesEl) {
+      ['NIFTY','SENSEX','SPY','QQQ','BTC','GOLD'].forEach(sym => {
+        const q  = this.generateQuote(sym);
+        const up = q.chg >= 0;
+        const clr = up ? '#00e676' : '#ff5252';
+        const div = document.createElement('div');
+        div.className = 'bbt-index-row';
+        div.innerHTML = `<span class="bbt-index-name">${sym}</span>
+          <span class="bbt-index-price">${this.fmtPrice(q.price)}</span>
+          <span style="color:${clr};font-size:0.7rem;">${up?'▲':'▼'}${Math.abs(q.chgPct)}%</span>`;
+        indicesEl.appendChild(div);
+      });
+    }
+    const statsEl = document.getElementById('bbtPortfolioStats');
+    if (statsEl) {
+      const count   = this._terminalWatchlist.length;
+      const gainers = this._terminalWatchlist.filter(i => this.generateQuote(i.symbol).chg >= 0).length;
+      statsEl.innerHTML = `
+        <div class="bbt-stat-row"><span>Symbols</span><span class="bbt-val">${count}</span></div>
+        <div class="bbt-stat-row"><span>Gainers</span><span class="bbt-val" style="color:#00e676">${gainers}</span></div>
+        <div class="bbt-stat-row"><span>Losers</span><span class="bbt-val" style="color:#ff5252">${count - gainers}</span></div>
+        <div class="bbt-stat-row"><span>Notes</span><span class="bbt-val">${this._terminalNotes.length}</span></div>`;
+    }
+  }
+
+  terminalCalcPnl() {
+    const buy    = parseFloat(document.getElementById('calcBuy')?.value)  || 0;
+    const sell   = parseFloat(document.getElementById('calcSell')?.value) || 0;
+    const qty    = parseFloat(document.getElementById('calcQty')?.value)  || 0;
+    const result = document.getElementById('calcResult');
+    if (!result) return;
+    if (!buy || !qty) { result.textContent = 'Enter valid values.'; return; }
+    const gross = (sell - buy) * qty;
+    const pct   = ((sell - buy) / buy * 100).toFixed(2);
+    const up    = gross >= 0;
+    result.innerHTML = `
+      <div style="color:${up?'#00e676':'#ff5252'};font-size:0.9rem;font-weight:700;">
+        ${up?'▲ PROFIT':'▼ LOSS'}: ₹${Math.abs(gross).toFixed(2)}
+      </div>
+      <div style="font-size:0.75rem;color:#aaa;margin-top:0.25rem;">
+        ${pct}% · Qty ${qty} · Buy ${buy} → Sell ${sell}
+      </div>`;
+    this.terminalAlert('P&L: ' + (up?'+':'') + gross.toFixed(2), up ? 'info' : 'warn');
+  }
+
+  terminalAlert(msg, type = 'info') {
+    const el = document.getElementById('bbtAlerts');
+    if (!el) return;
+    const div = document.createElement('div');
+    div.className = 'bbt-alert bbt-alert-' + type;
+    div.innerHTML = `<span>${new Date().toLocaleTimeString()}</span> ${this.escapeHtml(msg)}`;
+    el.prepend(div);
+    while (el.children.length > 6) el.removeChild(el.lastChild);
+  }
+
+  renderTerminalPanel(panel) {
+    ['watchlist','news','notes'].forEach(p => {
+      const id = 'panel' + p.charAt(0).toUpperCase() + p.slice(1);
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('hidden', p !== panel);
+    });
+    if (panel === 'watchlist') this.renderWatchlistPanel();
+    if (panel === 'news')      this.renderNewsFeed();
+    if (panel === 'notes')     this.renderNotesPanel();
+  }
+
+}
 
 /** SVG progress ring circumference (2 × π × r, r = 52) */
 SevaApp.CIRCUMFERENCE = 2 * Math.PI * 52;
