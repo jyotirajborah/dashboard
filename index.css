@@ -239,6 +239,7 @@ input, textarea, select {
 .header-nav {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 2px;
   padding: 3px var(--sp-4) 5px;
   background: rgba(148, 163, 184, 0.04);
@@ -472,12 +473,26 @@ input, textarea, select {
    ============================================================ */
 .dashboard-view,
 .analytics-view,
-.gantt-view {
+.gantt-view,
+.kanban-view,
+.tracker-view {
+  display: block;
   flex: 1;
   padding: var(--sp-4);
   max-width: 1440px;
   width: 100%;
   margin: 0 auto;
+  animation: fadeInUp 0.5s var(--ease-out) both;
+}
+
+.terminal-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 0;
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
   animation: fadeInUp 0.5s var(--ease-out) both;
 }
 
@@ -487,7 +502,7 @@ input, textarea, select {
 .kanban-view.hidden,
 .tracker-view.hidden,
 .terminal-view.hidden {
-  display: none;
+  display: none !important;
 }
 
 
@@ -2051,14 +2066,6 @@ input, textarea, select {
 /* ============================================================
    KANBAN BOARD
    ============================================================ */
-.kanban-view {
-  flex: 1;
-  padding: var(--sp-4);
-  max-width: 1440px;
-  width: 100%;
-  margin: 0 auto;
-  animation: fadeInUp 0.5s var(--ease-out) both;
-}
 
 .kanban-board {
   display: grid;
@@ -2232,14 +2239,6 @@ input, textarea, select {
 /* ============================================================
    PROGRESS TRACKER
    ============================================================ */
-.tracker-view {
-  flex: 1;
-  padding: var(--sp-4);
-  max-width: 1200px;
-  width: 100%;
-  margin: 0 auto;
-  animation: fadeInUp 0.5s var(--ease-out) both;
-}
 
 /* ─ Tracker Item ─ */
 .tracker-item {
@@ -2436,14 +2435,11 @@ input, textarea, select {
    BLOOMBERG-STYLE TERMINAL
    ============================================================ */
 .terminal-view {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
   background: #0a0c10;
   color: #c8ccd4;
   font-family: 'Courier New', 'Consolas', monospace;
   font-size: 0.8125rem;
-  height: calc(100vh - 60px);
+  height: calc(100vh - 90px);
   overflow: hidden;
 }
 

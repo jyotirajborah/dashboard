@@ -548,7 +548,7 @@ class SevaApp {
   switchView(view) {
     // Hide all views
     document.querySelectorAll('.dashboard-view,.analytics-view,.gantt-view,.kanban-view,.tracker-view,.terminal-view')
-      .forEach(v => v.classList.add('hidden'));
+      .forEach(v => { v.classList.add('hidden'); v.style.display = 'none'; });
 
     // Deactivate all toggle buttons
     document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
@@ -557,23 +557,32 @@ class SevaApp {
     const activeBtn = document.querySelector(`.toggle-btn[data-view="${view}"]`);
     if (activeBtn) activeBtn.classList.add('active');
 
-    if (view === 'analytics') {
-      this.dom.analyticsView?.classList.remove('hidden');
-      this.renderAnalytics();
-    } else if (view === 'gantt') {
-      this.dom.ganttView?.classList.remove('hidden');
-      this.renderGantt();
-    } else if (view === 'kanban') {
-      this.dom.kanbanView?.classList.remove('hidden');
-      this.renderKanban();
-    } else if (view === 'tracker') {
-      this.dom.trackerView?.classList.remove('hidden');
-      this.renderTracker();
-    } else if (view === 'terminal') {
-      this.dom.terminalView?.classList.remove('hidden');
-      this.initTerminal();
-    } else {
-      this.dom.dashboardView?.classList.remove('hidden');
+    // Map view name → element id and display type
+    const viewMap = {
+      dashboard: { id: 'dashboardView',  display: 'block' },
+      analytics: { id: 'analyticsView',  display: 'block' },
+      gantt:     { id: 'ganttView',       display: 'block' },
+      kanban:    { id: 'kanbanView',      display: 'block' },
+      tracker:   { id: 'trackerView',     display: 'block' },
+      terminal:  { id: 'terminalView',    display: 'flex'  },
+    };
+
+    const target = viewMap[view] || viewMap['dashboard'];
+    const el = document.getElementById(target.id);
+    if (el) {
+      el.classList.remove('hidden');
+      el.style.display = target.display;
+    }
+
+    // Render content
+    if (view === 'analytics') this.renderAnalytics();
+    else if (view === 'gantt') this.renderGantt();
+    else if (view === 'kanban') this.renderKanban();
+    else if (view === 'tracker') {
+      try { this.renderTracker(); } catch(err) { console.error('Tracker render error:', err); }
+    }
+    else if (view === 'terminal') {
+      try { this.initTerminal(); } catch(err) { console.error('Terminal init error:', err); }
     }
   }
 
@@ -1906,6 +1915,7 @@ class SevaApp {
     if (container) container.style.display = 'flex';
     if (emptyMsg) emptyMsg.style.display = 'none';
 
+    if (!container) return;
     container.innerHTML = items.map(item => this.renderTrackerItem(item)).join('');
 
     // Bind events
