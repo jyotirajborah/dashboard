@@ -32,6 +32,7 @@ class SevaApp {
     this.cacheDom();
     this.bindEvents();
     this.setDate(new Date());
+    this.switchView('dashboard');
     this.animateCards();
   }
 
@@ -543,9 +544,11 @@ class SevaApp {
   ───────────────────────────────────────────── */
 
   switchView(view) {
-    // Hide all views
-    document.querySelectorAll('.dashboard-view,.analytics-view,.gantt-view,.kanban-view,.tracker-view,.terminal-view')
-      .forEach(v => { v.classList.add('hidden'); v.style.display = 'none'; });
+    // Hide ALL views explicitly
+    ['dashboardView','analyticsView','ganttView','kanbanView','trackerView','terminalView'].forEach(function(id) {
+      var v = document.getElementById(id);
+      if (v) { v.classList.add('hidden'); v.style.display = 'none'; }
+    });
 
     // Deactivate all buttons
     document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
