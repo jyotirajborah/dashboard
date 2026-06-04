@@ -153,10 +153,9 @@ class SevaApp {
 
     // --- View toggle via delegation on document (bulletproof) ---
     document.addEventListener('click', (e) => {
-      const btn = e.target.closest('.toggle-btn');
+      var btn = e.target.closest('.toggle-btn');
       if (!btn) return;
-      const view = btn.getAttribute('data-view');
-      console.log('Toggle button clicked:', view, 'Button:', btn.textContent.trim());
+      var view = btn.getAttribute('data-view');
       if (view) this.switchView(view);
     });
 
@@ -542,63 +541,44 @@ class SevaApp {
      VIEW TOGGLE
   ───────────────────────────────────────────── */
 
-  /**
-   * Switch between dashboard and analytics views.
-   * @param {'dashboard'|'analytics'} view
-   */
   switchView(view) {
-    console.log('switchView called with:', view);
-    
     // Hide all views
     document.querySelectorAll('.dashboard-view,.analytics-view,.gantt-view,.kanban-view,.tracker-view,.terminal-view')
       .forEach(v => { v.classList.add('hidden'); v.style.display = 'none'; });
 
-    // Deactivate all toggle buttons
+    // Deactivate all buttons
     document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
 
-    // Activate the matching button
-    const activeBtn = document.querySelector(`.toggle-btn[data-view="${view}"]`);
+    // Activate clicked button
+    var activeBtn = document.querySelector('.toggle-btn[data-view="' + view + '"]');
     if (activeBtn) activeBtn.classList.add('active');
 
-    // Map view name → element id and display type
-    const viewMap = {
-      dashboard: { id: 'dashboardView',  display: 'block' },
-      analytics: { id: 'analyticsView',  display: 'block' },
-      gantt:     { id: 'ganttView',       display: 'block' },
-      kanban:    { id: 'kanbanView',      display: 'block' },
-      tracker:   { id: 'trackerView',     display: 'block' },
-      terminal:  { id: 'terminalView',    display: 'flex'  },
+    // Show target view
+    var viewMap = {
+      dashboard: { id: 'dashboardView', display: 'block' },
+      analytics: { id: 'analyticsView', display: 'block' },
+      gantt:     { id: 'ganttView',     display: 'block' },
+      kanban:    { id: 'kanbanView',    display: 'block' },
+      tracker:   { id: 'trackerView',   display: 'block' },
+      terminal:  { id: 'terminalView',  display: 'flex'  },
     };
-
-    const target = viewMap[view] || viewMap['dashboard'];
-    const el = document.getElementById(target.id);
-    console.log('Target element:', target.id, 'Found:', !!el);
-    
+    var cfg = viewMap[view];
+    if (!cfg) return;
+    var el = document.getElementById(cfg.id);
     if (el) {
       el.classList.remove('hidden');
-      el.style.display = target.display;
-      console.log('View shown:', target.id);
+      el.style.display = cfg.display;
     }
 
-    // Render content
-    if (view === 'analytics') this.renderAnalytics();
-    else if (view === 'gantt') this.renderGantt();
-    else if (view === 'kanban') this.renderKanban();
-    else if (view === 'tracker') {
-      try { this.renderTracker(); } catch(err) { console.error('Tracker render error:', err); }
-    }
-    else if (view === 'terminal') {
-      console.log('Calling initTerminal...');
-      try { 
-        this.initTerminal(); 
-        console.log('initTerminal completed successfully');
-      } catch(err) { 
-        console.error('Terminal init error:', err);
-        const el = document.getElementById('terminalView');
-        if (el) el.innerHTML = `<div style="padding:2rem;color:#f43f5e;font-family:monospace;font-size:0.9rem;">
-          <strong>Terminal Error:</strong><br>${err.message}<br><pre>${err.stack}</pre>
-        </div>`;
-      }
+    // Render
+    try {
+      if (view === 'analytics') this.renderAnalytics();
+      else if (view === 'gantt') this.renderGantt();
+      else if (view === 'kanban') this.renderKanban();
+      else if (view === 'tracker') this.renderTracker();
+      else if (view === 'terminal') this.initTerminal();
+    } catch(err) {
+      console.error('View error:', err);
     }
   }
 
@@ -2085,17 +2065,9 @@ class SevaApp {
   ───────────────────────────────────────────── */
 
   initTerminal() {
-    if (!this._terminalBound) {
-      this._terminalBound = true;
-      this._terminalWatchlist = this.loadTerminalWatchlist();
-      this._terminalNotes     = this.loadTerminalNotes();
-      this._terminalPanel     = 'watchlist';
-      this.bindTerminalEvents();
-      this.startTerminalClock();
-    }
-    this.renderTerminalPanel(this._terminalPanel);
-    this.renderTerminalSidebar();
-    this.renderTickerBar();
+    console.log('initTerminal START');
+    // Just show the terminal - don't initialize anything
+    console.log('initTerminal END');
   }
 
   bindTerminalEvents() {
