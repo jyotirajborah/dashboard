@@ -2303,6 +2303,7 @@ class SevaApp {
   renderTerminalSidebar() {
     const indicesEl = document.getElementById('bbtIndices');
     if (indicesEl) {
+      indicesEl.innerHTML = '';
       ['NIFTY','SENSEX','SPY','QQQ','BTC','GOLD'].forEach(sym => {
         const q  = this.generateQuote(sym);
         const up = q.chg >= 0;
