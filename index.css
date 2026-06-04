@@ -471,6 +471,11 @@ input, textarea, select {
 /* ============================================================
    3. MAIN CONTENT VIEWS
    ============================================================ */
+
+main {
+  min-height: calc(100vh - 90px);
+}
+
 .dashboard-view,
 .analytics-view,
 .gantt-view,
