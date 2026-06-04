@@ -1410,7 +1410,7 @@ class SevaApp {
     const chartW = totalDays * colW;
 
     // Month header row
-    html += `<div style="display:flex;position:sticky;top:0;z-index:2;">`;
+    html += `<div style="display:flex;position:relative;z-index:2;">`;
     html += `<div style="min-width:${labelW}px;padding:0.5rem 0.75rem;font-size:0.6875rem;font-weight:600;color:#64748b;background:#0f1432;border-bottom:1px solid rgba(148,163,184,0.08);"></div>`;
     html += `<div style="display:flex;">`;
     months.forEach(m => {
@@ -1419,7 +1419,7 @@ class SevaApp {
     html += `</div></div>`;
 
     // Day header row
-    html += `<div style="display:flex;position:sticky;top:28px;z-index:2;">`;
+    html += `<div style="display:flex;position:relative;z-index:2;">`;
     html += `<div style="min-width:${labelW}px;padding:0.25rem 0.75rem;font-size:0.625rem;font-weight:500;color:#64748b;background:#0a0e27;border-bottom:1px solid rgba(148,163,184,0.1);"></div>`;
     html += `<div style="display:flex;">`;
     days.forEach(d => {
@@ -1639,10 +1639,14 @@ class SevaApp {
     };
 
     // Update column counts
-    document.getElementById('todoCount').textContent = columns.todo.length;
-    document.getElementById('inprogressCount').textContent = columns.inprogress.length;
-    document.getElementById('reviewCount').textContent = columns.review.length;
-    document.getElementById('doneCount').textContent = columns.done.length;
+    const todoCount = document.getElementById('todoCount');
+    const inprogressCount = document.getElementById('inprogressCount');
+    const reviewCount = document.getElementById('reviewCount');
+    const doneCount = document.getElementById('doneCount');
+    if (todoCount) todoCount.textContent = columns.todo.length;
+    if (inprogressCount) inprogressCount.textContent = columns.inprogress.length;
+    if (reviewCount) reviewCount.textContent = columns.review.length;
+    if (doneCount) doneCount.textContent = columns.done.length;
 
     // Render each column
     ['todo', 'inprogress', 'review', 'done'].forEach(status => {
