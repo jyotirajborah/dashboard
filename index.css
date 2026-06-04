@@ -471,14 +471,6 @@ input, textarea, select {
 /* ============================================================
    3. MAIN CONTENT VIEWS
    ============================================================ */
-
-main {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-}
-
 .dashboard-view,
 .analytics-view,
 .gantt-view,
@@ -2447,7 +2439,7 @@ main {
   color: #c8ccd4;
   font-family: 'Courier New', 'Consolas', monospace;
   font-size: 0.8125rem;
-  min-height: 0;
+  height: calc(100vh - 130px);
   overflow: hidden;
 }
 
