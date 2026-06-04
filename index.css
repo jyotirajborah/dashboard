@@ -2497,13 +2497,6 @@ input, textarea, select {
 }
 
 /* Ticker bar */
-.bbt-ticker-bar {
-  background: #0d1117;
-  border-bottom: 1px solid #1e2330;
-  overflow: hidden;
-  height: 28px;
-  flex-shrink: 0;
-}
 .bbt-ticker-inner {
   display: flex;
   gap: 0;
@@ -2530,23 +2523,36 @@ input, textarea, select {
 /* Grid layout */
 .bbt-grid {
   display: grid;
-  grid-template-columns: 1fr 260px;
-  grid-template-rows: 1fr;
+  grid-template-columns: 1fr 220px;
+  grid-template-rows: auto 1fr;
   flex: 1;
   overflow: hidden;
   gap: 0;
+  min-height: 0;
 }
-.bbt-main {
+
+.bbt-ticker-bar {
+  grid-column: 1 / -1;
+  background: #0d1117;
+  border-bottom: 1px solid #1e2330;
   overflow: hidden;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.bbt-main {
+  overflow: auto;
   display: flex;
   flex-direction: column;
   border-right: 1px solid #1e2330;
+  min-height: 0;
 }
 .bbt-sidebar {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   background: #0d1117;
+  min-height: 0;
 }
 
 /* Panel */
