@@ -151,16 +151,13 @@ class SevaApp {
     this.dom.nextDay?.addEventListener('click', () => this.changeDate(1));
     this.dom.todayBtn?.addEventListener('click', () => this.setDate(new Date()));
 
-    // --- View toggle ---
-    this.dom.dashboardBtn?.addEventListener('click', () => this.switchView('dashboard'));
-    this.dom.analyticsBtn?.addEventListener('click', () => this.switchView('analytics'));
-    this.dom.ganttBtn?.addEventListener('click', () => this.switchView('gantt'));
-    this.dom.kanbanBtn?.addEventListener('click', () => this.switchView('kanban'));
-    this.dom.trackerBtn?.addEventListener('click', () => {
-      console.log('Tracker button clicked!');
-      this.switchView('tracker');
+    // --- View toggle via delegation on document (bulletproof) ---
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.toggle-btn');
+      if (!btn) return;
+      const view = btn.getAttribute('data-view');
+      if (view) this.switchView(view);
     });
-    this.dom.terminalBtn?.addEventListener('click', () => this.switchView('terminal'));
 
     // --- Anti-freeze toggle ---
     this.dom.antifreezeToggle?.addEventListener('click', () => this.toggleAntifreeze());
@@ -550,44 +547,33 @@ class SevaApp {
    */
   switchView(view) {
     // Hide all views
-    this.dom.dashboardView?.classList.add('hidden');
-    this.dom.analyticsView?.classList.add('hidden');
-    this.dom.ganttView?.classList.add('hidden');
-    this.dom.kanbanView?.classList.add('hidden');
-    this.dom.trackerView?.classList.add('hidden');
-    this.dom.terminalView?.classList.add('hidden');
+    document.querySelectorAll('.dashboard-view,.analytics-view,.gantt-view,.kanban-view,.tracker-view,.terminal-view')
+      .forEach(v => v.classList.add('hidden'));
 
     // Deactivate all toggle buttons
-    this.dom.dashboardBtn?.classList.remove('active');
-    this.dom.analyticsBtn?.classList.remove('active');
-    this.dom.ganttBtn?.classList.remove('active');
-    this.dom.kanbanBtn?.classList.remove('active');
-    this.dom.trackerBtn?.classList.remove('active');
-    this.dom.terminalBtn?.classList.remove('active');
+    document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+
+    // Activate the matching button
+    const activeBtn = document.querySelector(`.toggle-btn[data-view="${view}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
 
     if (view === 'analytics') {
       this.dom.analyticsView?.classList.remove('hidden');
-      this.dom.analyticsBtn?.classList.add('active');
       this.renderAnalytics();
     } else if (view === 'gantt') {
       this.dom.ganttView?.classList.remove('hidden');
-      this.dom.ganttBtn?.classList.add('active');
       this.renderGantt();
     } else if (view === 'kanban') {
       this.dom.kanbanView?.classList.remove('hidden');
-      this.dom.kanbanBtn?.classList.add('active');
       this.renderKanban();
     } else if (view === 'tracker') {
       this.dom.trackerView?.classList.remove('hidden');
-      this.dom.trackerBtn?.classList.add('active');
       this.renderTracker();
     } else if (view === 'terminal') {
       this.dom.terminalView?.classList.remove('hidden');
-      this.dom.terminalBtn?.classList.add('active');
       this.initTerminal();
     } else {
       this.dom.dashboardView?.classList.remove('hidden');
-      this.dom.dashboardBtn?.classList.add('active');
     }
   }
 
