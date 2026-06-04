@@ -233,13 +233,13 @@ input, textarea, select {
   justify-content: space-between;
   gap: var(--sp-3);
   padding: var(--sp-3) var(--sp-4);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 
 .header-nav {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
   gap: 2px;
   padding: 3px var(--sp-4) 5px;
   background: rgba(148, 163, 184, 0.04);
