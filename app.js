@@ -42,9 +42,11 @@ class SevaApp {
       dashboardBtn: document.getElementById('dashboardBtn'),
       analyticsBtn: document.getElementById('analyticsBtn'),
       ganttBtn: document.getElementById('ganttBtn'),
+      kanbanBtn: document.getElementById('kanbanBtn'),
       dashboardView: document.getElementById('dashboardView'),
       analyticsView: document.getElementById('analyticsView'),
       ganttView: document.getElementById('ganttView'),
+      kanbanView: document.getElementById('kanbanView'),
 
       // Date nav
       prevDay: document.getElementById('prevDay'),
@@ -149,8 +151,7 @@ class SevaApp {
     this.dom.dashboardBtn?.addEventListener('click', () => this.switchView('dashboard'));
     this.dom.analyticsBtn?.addEventListener('click', () => this.switchView('analytics'));
     this.dom.ganttBtn?.addEventListener('click', () => this.switchView('gantt'));
-    const kanbanBtn = document.getElementById('kanbanBtn');
-    if (kanbanBtn) kanbanBtn.addEventListener('click', () => this.switchView('kanban'));
+    this.dom.kanbanBtn?.addEventListener('click', () => this.switchView('kanban'));
 
     // --- Anti-freeze toggle ---
     this.dom.antifreezeToggle?.addEventListener('click', () => this.toggleAntifreeze());
@@ -543,15 +544,13 @@ class SevaApp {
     this.dom.dashboardView?.classList.add('hidden');
     this.dom.analyticsView?.classList.add('hidden');
     this.dom.ganttView?.classList.add('hidden');
-    const kanbanView = document.getElementById('kanbanView');
-    if (kanbanView) kanbanView.classList.add('hidden');
+    this.dom.kanbanView?.classList.add('hidden');
 
     // Deactivate all toggle buttons
     this.dom.dashboardBtn?.classList.remove('active');
     this.dom.analyticsBtn?.classList.remove('active');
     this.dom.ganttBtn?.classList.remove('active');
-    const kanbanBtn = document.getElementById('kanbanBtn');
-    if (kanbanBtn) kanbanBtn.classList.remove('active');
+    this.dom.kanbanBtn?.classList.remove('active');
 
     if (view === 'analytics') {
       this.dom.analyticsView?.classList.remove('hidden');
@@ -562,8 +561,8 @@ class SevaApp {
       this.dom.ganttBtn?.classList.add('active');
       this.renderGantt();
     } else if (view === 'kanban') {
-      if (kanbanView) kanbanView.classList.remove('hidden');
-      if (kanbanBtn) kanbanBtn.classList.add('active');
+      this.dom.kanbanView?.classList.remove('hidden');
+      this.dom.kanbanBtn?.classList.add('active');
       this.renderKanban();
     } else {
       this.dom.dashboardView?.classList.remove('hidden');
