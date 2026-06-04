@@ -571,15 +571,11 @@ class SevaApp {
     }
 
     // Render
-    try {
-      if (view === 'analytics') this.renderAnalytics();
-      else if (view === 'gantt') this.renderGantt();
-      else if (view === 'kanban') this.renderKanban();
-      else if (view === 'tracker') this.renderTracker();
-      else if (view === 'terminal') this.initTerminal();
-    } catch(err) {
-      console.error('View error:', err);
-    }
+    if (view === 'analytics') { try { this.renderAnalytics(); } catch(e) { console.error('analytics:',e); } }
+    else if (view === 'gantt') { try { this.renderGantt(); } catch(e) { console.error('gantt:',e); } }
+    else if (view === 'kanban') { try { this.renderKanban(); } catch(e) { console.error('kanban:',e); } }
+    else if (view === 'tracker') { try { this.renderTracker(); } catch(e) { console.error('tracker:',e); } }
+    else if (view === 'terminal') { try { this.initTerminal(); } catch(e) { console.error('terminal:',e); } }
   }
 
   /* ─────────────────────────────────────────────
@@ -2066,7 +2062,21 @@ class SevaApp {
 
   initTerminal() {
     console.log('initTerminal START');
-    // Just show the terminal - don't initialize anything
+    try {
+      if (!this._terminalBound) {
+        this._terminalBound = true;
+        this._terminalWatchlist = this.loadTerminalWatchlist();
+        this._terminalNotes     = this.loadTerminalNotes();
+        this._terminalPanel     = 'watchlist';
+        this.bindTerminalEvents();
+        this.startTerminalClock();
+      }
+      this.renderTerminalPanel(this._terminalPanel);
+      this.renderTerminalSidebar();
+      this.renderTickerBar();
+    } catch(e) {
+      console.error('initTerminal inner error:', e);
+    }
     console.log('initTerminal END');
   }
 
