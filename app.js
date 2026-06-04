@@ -156,6 +156,7 @@ class SevaApp {
       const btn = e.target.closest('.toggle-btn');
       if (!btn) return;
       const view = btn.getAttribute('data-view');
+      console.log('Toggle button clicked:', view, 'Button:', btn.textContent.trim());
       if (view) this.switchView(view);
     });
 
@@ -546,6 +547,8 @@ class SevaApp {
    * @param {'dashboard'|'analytics'} view
    */
   switchView(view) {
+    console.log('switchView called with:', view);
+    
     // Hide all views
     document.querySelectorAll('.dashboard-view,.analytics-view,.gantt-view,.kanban-view,.tracker-view,.terminal-view')
       .forEach(v => { v.classList.add('hidden'); v.style.display = 'none'; });
@@ -569,9 +572,12 @@ class SevaApp {
 
     const target = viewMap[view] || viewMap['dashboard'];
     const el = document.getElementById(target.id);
+    console.log('Target element:', target.id, 'Found:', !!el);
+    
     if (el) {
       el.classList.remove('hidden');
       el.style.display = target.display;
+      console.log('View shown:', target.id);
     }
 
     // Render content
@@ -582,7 +588,13 @@ class SevaApp {
       try { this.renderTracker(); } catch(err) { console.error('Tracker render error:', err); }
     }
     else if (view === 'terminal') {
-      try { this.initTerminal(); } catch(err) { console.error('Terminal init error:', err); }
+      console.log('Calling initTerminal...');
+      try { 
+        this.initTerminal(); 
+        console.log('initTerminal completed successfully');
+      } catch(err) { 
+        console.error('Terminal init error:', err); 
+      }
     }
   }
 
