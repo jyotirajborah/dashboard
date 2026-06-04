@@ -593,7 +593,11 @@ class SevaApp {
         this.initTerminal(); 
         console.log('initTerminal completed successfully');
       } catch(err) { 
-        console.error('Terminal init error:', err); 
+        console.error('Terminal init error:', err);
+        const el = document.getElementById('terminalView');
+        if (el) el.innerHTML = `<div style="padding:2rem;color:#f43f5e;font-family:monospace;font-size:0.9rem;">
+          <strong>Terminal Error:</strong><br>${err.message}<br><pre>${err.stack}</pre>
+        </div>`;
       }
     }
   }
